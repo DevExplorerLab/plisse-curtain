@@ -1,0 +1,2465 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plise Perde — Plise Perde Sipariş & Yönetim Sistemi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            stonearch: {
+              50: '#faf9f7',
+              100: '#f3f0ea',
+              200: '#e5dfd3',
+              300: '#d2c8b6',
+              800: '#272420',
+              900: '#181613',
+              950: '#0f0e0c',
+            },
+            terracotta: {
+              50: '#fdf5f2',
+              100: '#fae8e1',
+              500: '#c85a32',
+              600: '#b04823',
+              700: '#8f3819',
+            },
+            sage: {
+              50: '#f3f7f4',
+              100: '#e2ede5',
+              600: '#2f6f4e',
+              700: '#23563c',
+            }
+          },
+          boxShadow: {
+            soft: '0 10px 30px -10px rgba(24, 22, 19, 0.08)',
+            card: '0 4px 20px -4px rgba(24, 22, 19, 0.06)',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #faf9f7;
+      color: #181613;
+      overflow-x: hidden;
+    }
+
+    .plisse-pattern {
+      background-image: repeating-linear-gradient(
+        90deg,
+        rgba(200, 90, 50, 0.035) 0px,
+        rgba(200, 90, 50, 0.035) 8px,
+        rgba(24, 22, 19, 0.03) 8px,
+        rgba(24, 22, 19, 0.03) 16px
+      );
+    }
+
+    .glass-nav {
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background-color: rgba(250, 249, 247, 0.9);
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printableArea, #printableArea * {
+        visibility: visible;
+      }
+      #printableArea {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #fff !important;
+        padding: 16px;
+        box-shadow: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-terracotta-500 selection:text-white">
+
+  <!-- Üst Veritabanı Durum Şeridi -->
+  <div class="bg-stonearch-950 text-stonearch-100 text-xs py-2 px-4 border-b border-stonearch-800">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>Sunucusuz Gömülü Veritabanı Aktif • Veriler tarayıcı içinde saklanır</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <span id="dbStatsBadge" class="text-stonearch-300"></span>
+        <button type="button" onclick="downloadStandaloneSnapshot()" class="underline hover:text-white transition cursor-pointer">
+          Taşınabilir Tek Dosya (.html) Dışa Aktar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ana Navigasyon & Sekme Çubuğu -->
+  <header class="sticky top-0 z-40 glass-nav border-b border-stonearch-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-wrap items-center justify-between gap-3 py-3">
+        <!-- Marka Logosu -->
+        <button type="button" onclick="switchTab('order')" class="flex items-center gap-3 text-left group cursor-pointer">
+          <div class="w-10 h-10 rounded-xl bg-stonearch-900 text-white flex items-center justify-center shadow-sm group-hover:bg-terracotta-600 transition">
+            <!-- Minimalist Plise Perde SVG Logosu -->
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M3 4h18" stroke-linecap="round" />
+              <path d="M5 4v16M9 4v16M13 4v16M17 4v16M21 4v16" stroke-opacity="0.45" />
+              <path d="M3 20l3-2 3 2 3-2 3 2 3-2 3 2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-lg font-extrabold tracking-tight text-stonearch-950">PLİSE PERDE</span>
+              <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-terracotta-100 text-terracotta-700">SPA</span>
+            </div>
+            <p class="text-[11px] text-stonearch-800/70">Plise Perde Sipariş & Yönetim Sistemi</p>
+          </div>
+        </button>
+
+        <!-- Sekme Butonları -->
+        <nav class="flex items-center gap-1 sm:gap-2 overflow-x-auto max-w-full py-1" aria-label="Ana sekmeler">
+          <button type="button" data-tab="order" onclick="switchTab('order')" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5">
+            <span>Sipariş Oluştur</span>
+            <span id="navCartCount" class="px-1.5 py-0.5 text-[11px] rounded-full bg-terracotta-600 text-white hidden">0</span>
+          </button>
+          <button type="button" data-tab="gallery" onclick="switchTab('gallery')" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap cursor-pointer">
+            Ürün Galerisi
+          </button>
+          <button type="button" data-tab="account" onclick="switchTab('account')" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap cursor-pointer">
+            Siparişlerim & Hesap
+          </button>
+          <button type="button" data-tab="admin" onclick="switchTab('admin')" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5">
+            <span>Yönetim Paneli</span>
+            <span id="adminLockIcon" class="text-xs opacity-75">🔒</span>
+          </button>
+        </nav>
+
+        <!-- Aktif Kullanıcı / Giriş-Kayıt Butonları -->
+        <div id="headerUserBox" class="flex items-center gap-2"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Bildirim Toast Alanı -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- Ana İçerik Kapsayıcısı -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- ===================================================================== -->
+    <!-- SEKME 1: SİPARİŞ OLUŞTUR (CANLI HESAPLAYICI & SEPET)                  -->
+    <!-- ===================================================================== -->
+    <section id="tab-order" class="tab-content space-y-8">
+      <!-- Mimari Üst Banner -->
+      <div class="rounded-3xl bg-stonearch-900 text-white p-6 sm:p-8 plisse-pattern relative overflow-hidden shadow-soft">
+        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div class="lg:col-span-7 space-y-3">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-stonearch-100">
+              Özel Ölçü Üretim • Minimum 1.00 m² Hesaplama Kuralı
+            </span>
+            <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
+              Plise Perde Ölçü & Fiyat Hesaplayıcı
+            </h1>
+            <p class="text-sm sm:text-base text-stonearch-200 max-w-2xl">
+              En, boy ve adet bilgilerini girin; kasa rengi, sistem türü ve kumaş serisine göre anlık alan (m²) ve tutar hesaplamasını inceleyip sepetinize ekleyin.
+            </p>
+          </div>
+          <div class="lg:col-span-5 grid grid-cols-3 gap-3 text-center">
+            <div class="rounded-2xl bg-white/10 p-3.5 backdrop-blur-sm">
+              <div class="text-xl sm:text-2xl font-bold text-terracotta-100" id="heroSeriesCount">8</div>
+              <div class="text-[11px] text-stonearch-200 mt-0.5">Kumaş Serisi</div>
+            </div>
+            <div class="rounded-2xl bg-white/10 p-3.5 backdrop-blur-sm">
+              <div class="text-xl sm:text-2xl font-bold text-emerald-300">1.00 m²</div>
+              <div class="text-[11px] text-stonearch-200 mt-0.5">Minimum Alan</div>
+            </div>
+            <div class="rounded-2xl bg-white/10 p-3.5 backdrop-blur-sm">
+              <div class="text-xl sm:text-2xl font-bold text-amber-300" id="heroSystemsCount">4</div>
+              <div class="text-[11px] text-stonearch-200 mt-0.5">Sistem Türü</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hesaplayıcı Formu + Canlı Önizleme / Sepet -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <!-- Sol Kolon: Parametreler (7 sütun) -->
+        <form id="calculatorForm" onsubmit="handleAddToCart(event)" class="lg:col-span-7 bg-white rounded-3xl border border-stonearch-200 p-5 sm:p-7 shadow-card space-y-6">
+          <div class="flex items-center justify-between border-b border-stonearch-100 pb-4">
+            <div>
+              <h2 class="text-lg sm:text-xl font-bold text-stonearch-950">Ölçü & Sistem Yapılandırıcı</h2>
+              <p class="text-xs text-stonearch-800/70">Değerleri değiştirdikçe sağ tarafta anlık önizleme ve tutar güncellenir</p>
+            </div>
+            <button type="button" onclick="resetCalculator()" class="text-xs font-semibold text-terracotta-600 hover:text-terracotta-700 px-3 py-1.5 rounded-xl bg-terracotta-50 transition cursor-pointer">
+              Sıfırla
+            </button>
+          </div>
+
+          <!-- En (cm), Boy (cm), Adet -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="calcWidth" class="block text-xs font-semibold uppercase tracking-wider text-stonearch-800 mb-1.5">
+                En (cm) *
+              </label>
+              <input id="calcWidth" type="number" min="10" max="600" step="0.5" value="100" required oninput="recalculatePreview()"
+                class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/60 px-4 py-2.5 text-sm font-semibold text-stonearch-950 focus:outline-none focus:ring-2 focus:ring-terracotta-500 focus:bg-white transition" />
+            </div>
+            <div>
+              <label for="calcHeight" class="block text-xs font-semibold uppercase tracking-wider text-stonearch-800 mb-1.5">
+                Boy (cm) *
+              </label>
+              <input id="calcHeight" type="number" min="10" max="600" step="0.5" value="150" required oninput="recalculatePreview()"
+                class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/60 px-4 py-2.5 text-sm font-semibold text-stonearch-950 focus:outline-none focus:ring-2 focus:ring-terracotta-500 focus:bg-white transition" />
+            </div>
+            <div>
+              <label for="calcQty" class="block text-xs font-semibold uppercase tracking-wider text-stonearch-800 mb-1.5">
+                Adet *
+              </label>
+              <input id="calcQty" type="number" min="1" max="500" step="1" value="1" required oninput="recalculatePreview()"
+                class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/60 px-4 py-2.5 text-sm font-semibold text-stonearch-950 focus:outline-none focus:ring-2 focus:ring-terracotta-500 focus:bg-white transition" />
+            </div>
+          </div>
+
+          <!-- Kasa Rengi -->
+          <div>
+            <label for="calcCaseColor" class="block text-xs font-semibold uppercase tracking-wider text-stonearch-800 mb-1.5">
+              Kasa Rengi *
+            </label>
+            <div id="caseColorPills" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
+            <select id="calcCaseColor" class="sr-only" onchange="recalculatePreview()"></select>
+          </div>
+
+          <!-- Sistem Seçimi -->
+          <div>
+            <label for="calcSystem" class="block text-xs font-semibold uppercase tracking-wider text-stonearch-800 mb-1.5">
+              Sistem Seçimi *
+            </label>
+            <select id="calcSystem" onchange="onSystemChange()"
+              class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/60 px-4 py-2.5 text-sm font-semibold text-stonearch-950 focus:outline-none focus:ring-2 focus:ring-terracotta-500 focus:bg-white transition">
+            </select>
+          </div>
+
+          <!-- Çiftli Sistem Seçildiğinde Dinamik Açılan Alanlar -->
+          <div id="doubleSystemPanel" class="hidden rounded-2xl border-2 border-terracotta-200 bg-terracotta-50/60 p-4 space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-terracotta-700">
+                Çiftli Sistem Ek Seçimleri
+              </span>
+              <span class="text-[11px] font-medium text-terracotta-700/80">Ekstra Sistem & Model 2</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="calcExtraSystem" class="block text-xs font-semibold text-stonearch-900 mb-1">
+                  Ekstra Sistem Seçimi
+                </label>
+                <select id="calcExtraSystem" onchange="recalculatePreview()"
+                  class="w-full rounded-xl border border-terracotta-300 bg-white px-3.5 py-2 text-sm font-medium text-stonearch-950 focus:outline-none focus:ring-2 focus:ring-terracotta-500">
+                </select>
+              </div>
+              <div>
+                <label for="calcModel2" class="block text-xs font-semibold text-stonearch-900 mb-1">
+                  Model 2 (Tül / İkinci Kumaş)
+                </label>
+                <select id="calcModel2" onchange="recalculatePreview()"
+                  class="w-full rounded-xl border border-terracotta-300 bg-white px-3.5 py-2 text-sm font-medium text-stonearch-950 focus:outline-none focus:ring-2 focus:ring-terracotta-500">
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seri & Model Seçimi -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="calcSeries" class="block text-xs font-semibold uppercase tracking-wider text-stonearch-800 mb-1.5">
+                Seri Seçimi *
+              </label>
+              <select id="calcSeries" onchange="onSeriesChange()"
+                class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/60 px-4 py-2.5 text-sm font-semibold text-stonearch-950 focus:outline-none focus:ring-2 focus:ring-terracotta-500 focus:bg-white transition">
+              </select>
+            </div>
+            <div>
+              <label for="calcModel" class="block text-xs font-semibold uppercase tracking-wider text-stonearch-800 mb-1.5">
+                Model Kodu *
+              </label>
+              <select id="calcModel" onchange="recalculatePreview()"
+                class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/60 px-4 py-2.5 text-sm font-semibold text-stonearch-950 focus:outline-none focus:ring-2 focus:ring-terracotta-500 focus:bg-white transition">
+              </select>
+            </div>
+          </div>
+
+          <!-- Özel Sipariş Notu / Mesaj Alanı -->
+          <div>
+            <label for="calcNote" class="block text-xs font-semibold uppercase tracking-wider text-stonearch-800 mb-1.5">
+              Özel Sipariş Notu / Mesaj
+            </label>
+            <input id="calcNote" type="text" placeholder="Örn: Salon sol kanat, ip yönü sağda olsun..."
+              class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/60 px-4 py-2.5 text-sm text-stonearch-950 focus:outline-none focus:ring-2 focus:ring-terracotta-500 focus:bg-white transition" />
+          </div>
+
+          <button type="submit" class="w-full py-3.5 px-6 rounded-2xl bg-terracotta-600 hover:bg-terracotta-700 active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-md transition cursor-pointer flex items-center justify-center gap-2">
+            <span>Sepete Ekle</span>
+            <span id="btnAddPriceTag" class="px-2.5 py-0.5 rounded-full bg-white/20 text-xs font-extrabold"></span>
+          </button>
+        </form>
+
+        <!-- Sağ Kolon: Canlı Önizleme Kartı & Sepet Tablosu (5 sütun) -->
+        <div class="lg:col-span-5 space-y-6">
+          <!-- Canlı Alan & Fiyat Hesaplama Kartı -->
+          <div class="bg-white rounded-3xl border border-stonearch-200 p-5 sm:p-6 shadow-card space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-bold text-stonearch-950">Canlı Alan & Fiyat Önizlemesi</h3>
+              <span id="minAreaBadge" class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-stonearch-100 text-stonearch-800"></span>
+            </div>
+
+            <!-- Canlı SVG Plise Perde Önizlemesi -->
+            <div class="rounded-2xl bg-stonearch-100/80 border border-stonearch-200 p-4 flex items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="text-xs text-stonearch-800/70">Ham Alan: <strong id="rawAreaText">1.50 m²</strong></div>
+                <div class="text-sm font-bold text-stonearch-950">Hesaplanan Alan: <span id="billedAreaText" class="text-terracotta-600">1.50 m²</span></div>
+                <div class="text-xs text-stonearch-800/70">Kasa Rengi: <strong id="previewCaseLabel">Beyaz</strong></div>
+                <div class="text-xs text-stonearch-800/70">Adet: <strong id="previewQtyLabel">1</strong></div>
+              </div>
+              <div id="livePlisseSvgContainer" class="w-28 h-28 rounded-xl bg-white border border-stonearch-300 p-1.5 flex items-center justify-center shrink-0 shadow-inner"></div>
+            </div>
+
+            <!-- Formül Dağılımı -->
+            <div class="space-y-2 text-xs sm:text-sm border-t border-stonearch-100 pt-3">
+              <div class="flex justify-between text-stonearch-800">
+                <span>Model 1 m² Fiyatı</span>
+                <span id="breakdownModel1" class="font-semibold">0,00 ₺</span>
+              </div>
+              <div id="breakdownModel2Row" class="hidden justify-between text-stonearch-800">
+                <span>Model 2 m² Fiyatı</span>
+                <span id="breakdownModel2" class="font-semibold">0,00 ₺</span>
+              </div>
+              <div class="flex justify-between text-stonearch-800">
+                <span>Sistem Fiyatı</span>
+                <span id="breakdownSystem" class="font-semibold">0,00 ₺</span>
+              </div>
+              <div id="breakdownExtraRow" class="hidden justify-between text-stonearch-800">
+                <span>Ekstra Sistem Fiyatı</span>
+                <span id="breakdownExtra" class="font-semibold">0,00 ₺</span>
+              </div>
+              <div class="flex justify-between text-stonearch-800">
+                <span>Formül Çarpanı (Alan × Adet)</span>
+                <span id="breakdownMultiplier" class="font-semibold">1.50 m² × 1</span>
+              </div>
+            </div>
+
+            <div class="flex items-baseline justify-between border-t-2 border-stonearch-900 pt-3">
+              <span class="text-sm font-bold text-stonearch-900">Hesaplanan Tutar</span>
+              <span id="calcGrandTotal" class="text-2xl font-extrabold text-terracotta-600">0,00 ₺</span>
+            </div>
+          </div>
+
+          <!-- Sepet Tablosu -->
+          <div class="bg-white rounded-3xl border border-stonearch-200 p-5 sm:p-6 shadow-card space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-bold text-stonearch-950">Sipariş Sepeti (<span id="cartCountLabel">0</span>)</h3>
+              <button type="button" onclick="clearCart()" class="text-xs font-medium text-stonearch-800/60 hover:text-red-600 transition cursor-pointer">
+                Sepeti Temizle
+              </button>
+            </div>
+
+            <div id="cartItemsList" class="space-y-3 max-h-96 overflow-y-auto pr-1"></div>
+
+            <div id="cartCheckoutBox" class="border-t border-stonearch-200 pt-4 space-y-3 hidden">
+              <div class="flex items-center justify-between text-sm">
+                <span class="font-semibold text-stonearch-800">Toplam Sepet Tutarı</span>
+                <span id="cartTotalAmount" class="text-lg font-extrabold text-stonearch-950">0,00 ₺</span>
+              </div>
+
+              <div id="checkoutUserNotice" class="rounded-xl bg-stonearch-50 border border-stonearch-200 p-3 text-xs text-stonearch-800"></div>
+
+              <button type="button" onclick="confirmOrderFromCart()" class="w-full py-3 px-4 rounded-2xl bg-sage-700 hover:bg-sage-600 text-white font-bold text-sm shadow-sm transition cursor-pointer">
+                Siparişi Onayla
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SEKME 2: ÜRÜN GALERİSİ                                                -->
+    <!-- ===================================================================== -->
+    <section id="tab-gallery" class="tab-content hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-3xl border border-stonearch-200 p-6 shadow-card">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-terracotta-600">Kumaş & Uygulama Kataloğu</span>
+          <h2 class="text-2xl font-extrabold text-stonearch-950 mt-1">Ürün Galerisi</h2>
+          <p class="text-sm text-stonearch-800/70 mt-1">Serilere göre filtreleyin veya arama yapın; görsele tıklayarak tam ekran Lightbox modunda inceleyin.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <input id="gallerySearchInput" type="text" oninput="renderGallery()" placeholder="Model veya seri ara..."
+            class="rounded-xl border border-stonearch-300 bg-stonearch-50 px-3.5 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500" />
+          <div id="galleryFilterButtons" class="flex flex-wrap gap-1.5"></div>
+        </div>
+      </div>
+
+      <div id="galleryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SEKME 3: SİPARİŞLERİM & HESAP                                         -->
+    <!-- ===================================================================== -->
+    <section id="tab-account" class="tab-content hidden space-y-6">
+      <!-- Giriş & Kayıt Görünümü -->
+      <div id="authViewsContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Giriş Kartı -->
+        <div class="bg-white rounded-3xl border border-stonearch-200 p-6 sm:p-8 shadow-card space-y-5">
+          <div>
+            <h2 class="text-xl font-extrabold text-stonearch-950">Hesap Girişi</h2>
+            <p class="text-xs text-stonearch-800/70 mt-1">Siparişlerinizi görüntülemek veya sepetinizi onaylamak için giriş yapın.</p>
+          </div>
+
+          <!-- Tek Tıkla Demo Hesap Doldur / Giriş -->
+          <div class="rounded-2xl bg-stonearch-50 border border-stonearch-200 p-3.5 space-y-2">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-stonearch-800/70">Demo Hesaplar (Tek Tıkla Doldur & Giriş)</div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="quickLogin('Admin@gmail.com', '987654321')" class="px-3 py-1.5 rounded-xl bg-stonearch-900 hover:bg-stonearch-800 text-xs font-semibold text-white transition cursor-pointer">
+                Yönetici (Admin@gmail.com)
+              </button>
+              <button type="button" onclick="quickLogin('admin2@gmail.com', '1234')" class="px-3 py-1.5 rounded-xl bg-white border border-stonearch-300 hover:border-terracotta-500 text-xs font-semibold text-stonearch-900 transition cursor-pointer">
+                Uğur Akbaş (admin2@gmail.com)
+              </button>
+              <button type="button" onclick="quickLogin('deneme@gmail.com', '1234')" class="px-3 py-1.5 rounded-xl bg-white border border-stonearch-300 hover:border-terracotta-500 text-xs font-semibold text-stonearch-900 transition cursor-pointer">
+                Deneme Bayi (deneme@gmail.com)
+              </button>
+            </div>
+          </div>
+
+          <form onsubmit="handleLogin(event)" class="space-y-4">
+            <div>
+              <label for="loginEmail" class="block text-xs font-semibold text-stonearch-800 mb-1">E-posta Adresi</label>
+              <input id="loginEmail" type="email" required placeholder="ornek@gmail.com"
+                class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500" />
+            </div>
+            <div>
+              <label for="loginPassword" class="block text-xs font-semibold text-stonearch-800 mb-1">Şifre</label>
+              <input id="loginPassword" type="password" required placeholder="••••••••"
+                class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500" />
+            </div>
+            <button type="submit" class="w-full py-3 rounded-2xl bg-stonearch-950 hover:bg-stonearch-800 text-white font-bold text-sm transition cursor-pointer">
+              Giriş Yap
+            </button>
+          </form>
+        </div>
+
+        <!-- Kayıt Kartı -->
+        <div class="bg-white rounded-3xl border border-stonearch-200 p-6 sm:p-8 shadow-card space-y-5">
+          <div>
+            <h2 class="text-xl font-extrabold text-stonearch-950">Yeni Bayi / Müşteri Kaydı</h2>
+            <p class="text-xs text-stonearch-800/70 mt-1">Bilgilerinizi kaydederek anında sipariş oluşturun ve bakiye takibi yapın.</p>
+          </div>
+
+          <form onsubmit="handleRegister(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label class="block text-xs font-semibold text-stonearch-800 mb-1">Ad *</label>
+              <input id="regName" type="text" required class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/50 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stonearch-800 mb-1">Soyad *</label>
+              <input id="regSurname" type="text" required class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/50 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stonearch-800 mb-1">Dükkan Adı *</label>
+              <input id="regShop" type="text" required class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/50 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stonearch-800 mb-1">Telefon *</label>
+              <input id="regPhone" type="tel" required placeholder="(5XX) XXX-XX-XX" class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/50 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stonearch-800 mb-1">E-posta *</label>
+              <input id="regEmail" type="email" required class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/50 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stonearch-800 mb-1">Adres</label>
+              <input id="regAddress" type="text" placeholder="Mahalle, Cadde, İlçe / İl" class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/50 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-stonearch-800 mb-1">Şifre *</label>
+              <input id="regPassword" type="password" required minlength="4" class="w-full rounded-xl border border-stonearch-300 bg-stonearch-50/50 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500" />
+            </div>
+            <div class="sm:col-span-2 pt-1">
+              <button type="submit" class="w-full py-3 rounded-2xl bg-terracotta-600 hover:bg-terracotta-700 text-white font-bold text-sm transition cursor-pointer">
+                Kayıt Ol ve Giriş Yap
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Oturum Açık Kullanıcı Profili & Sipariş Geçmişi -->
+      <div id="userDashboardContainer" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Profil Bilgileri Güncelleme Formu -->
+          <div class="lg:col-span-5 bg-white rounded-3xl border border-stonearch-200 p-6 shadow-card space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-extrabold text-stonearch-950">Profil Bilgilerim</h2>
+                <p id="profileRoleBadge" class="text-xs text-stonearch-800/70"></p>
+              </div>
+              <button type="button" onclick="handleLogout()" class="px-3 py-1.5 rounded-xl bg-stonearch-100 hover:bg-red-50 hover:text-red-600 text-xs font-bold transition cursor-pointer">
+                Çıkış Yap
+              </button>
+            </div>
+
+            <div class="rounded-2xl bg-terracotta-50 border border-terracotta-100 p-4 flex items-center justify-between">
+              <span class="text-xs font-semibold text-terracotta-700">Toplam Güncel Borç / Bakiye</span>
+              <span id="profileDebtAmount" class="text-lg font-extrabold text-terracotta-700">0,00 ₺</span>
+            </div>
+
+            <form onsubmit="handleProfileUpdate(event)" class="space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-stonearch-800 mb-1">Ad</label>
+                  <input id="profName" type="text" required class="w-full rounded-xl border border-stonearch-300 px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-stonearch-800 mb-1">Soyad</label>
+                  <input id="profSurname" type="text" required class="w-full rounded-xl border border-stonearch-300 px-3 py-2 text-sm" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-stonearch-800 mb-1">E-posta</label>
+                <input id="profEmail" type="email" required class="w-full rounded-xl border border-stonearch-300 px-3 py-2 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-stonearch-800 mb-1">Dükkan Adı</label>
+                <input id="profShop" type="text" required class="w-full rounded-xl border border-stonearch-300 px-3 py-2 text-sm" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-stonearch-800 mb-1">Telefon</label>
+                  <input id="profPhone" type="text" required class="w-full rounded-xl border border-stonearch-300 px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-stonearch-800 mb-1">Yeni Şifre</label>
+                  <input id="profPassword" type="password" placeholder="Opsiyonel" class="w-full rounded-xl border border-stonearch-300 px-3 py-2 text-sm" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-stonearch-800 mb-1">Adres</label>
+                <input id="profAddress" type="text" class="w-full rounded-xl border border-stonearch-300 px-3 py-2 text-sm" />
+              </div>
+              <button type="submit" class="w-full py-2.5 rounded-xl bg-stonearch-900 hover:bg-stonearch-800 text-white font-bold text-sm transition cursor-pointer">
+                Bilgileri Güncelle
+              </button>
+            </form>
+          </div>
+
+          <!-- Geçmiş Siparişlerim -->
+          <div class="lg:col-span-7 bg-white rounded-3xl border border-stonearch-200 p-6 shadow-card space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-extrabold text-stonearch-950">Geçmiş Siparişlerim</h2>
+              <span id="userOrdersCount" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-stonearch-100 text-stonearch-800"></span>
+            </div>
+            <div id="userOrdersList" class="space-y-4"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SEKME 4: YÖNETİM PANELİ (ADMİN)                                       -->
+    <!-- ===================================================================== -->
+    <section id="tab-admin" class="tab-content hidden space-y-6">
+      <!-- Admin Giriş Kapısı -->
+      <div id="adminGateCard" class="max-w-lg mx-auto bg-white rounded-3xl border border-stonearch-200 p-7 shadow-card text-center space-y-4">
+        <div class="w-12 h-12 rounded-2xl bg-stonearch-900 text-white flex items-center justify-center mx-auto text-xl">
+          🛡️
+        </div>
+        <h2 class="text-xl font-extrabold text-stonearch-950">Yönetim Paneli Girişi</h2>
+        <p class="text-xs text-stonearch-800/70">
+          Aktif ve teslim edilen siparişleri yönetmek, cari borç tahsilatı yapmak, fiyat/seri/sistem güncellemek ve gömülü veritabanını yönetmek için yönetici hesabıyla giriş yapın.
+        </p>
+        <button type="button" onclick="quickLogin('Admin@gmail.com', '987654321')" class="w-full py-3 rounded-2xl bg-terracotta-600 hover:bg-terracotta-700 text-white font-bold text-sm transition cursor-pointer">
+          Yönetici Hesabıyla Giriş Yap (Admin@gmail.com)
+        </button>
+      </div>
+
+      <!-- Admin Çalışma Alanı -->
+      <div id="adminWorkspace" class="hidden space-y-6">
+        <!-- Üst Özet Kartları + Sesli Bildirim Testi -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white rounded-2xl border border-stonearch-200 p-4 shadow-card">
+            <div class="text-xs font-semibold text-stonearch-800/60">Aktif Siparişler</div>
+            <div id="statActiveOrders" class="text-2xl font-extrabold text-stonearch-950 mt-1">0</div>
+          </div>
+          <div class="bg-white rounded-2xl border border-stonearch-200 p-4 shadow-card">
+            <div class="text-xs font-semibold text-stonearch-800/60">Teslim Edilenler (4)</div>
+            <div id="statDeliveredOrders" class="text-2xl font-extrabold text-sage-700 mt-1">0</div>
+          </div>
+          <div class="bg-white rounded-2xl border border-stonearch-200 p-4 shadow-card">
+            <div class="text-xs font-semibold text-stonearch-800/60">Toplam Cari Alacak</div>
+            <div id="statTotalDebt" class="text-2xl font-extrabold text-terracotta-600 mt-1">0,00 ₺</div>
+          </div>
+          <div class="bg-white rounded-2xl border border-stonearch-200 p-4 shadow-card flex flex-col justify-between">
+            <div class="text-xs font-semibold text-stonearch-800/60">Sipariş Zil Bildirimi</div>
+            <button type="button" onclick="playNotificationChime()" class="mt-2 px-3 py-1.5 rounded-xl bg-stonearch-900 hover:bg-stonearch-800 text-white text-xs font-bold transition cursor-pointer">
+              🔔 Zil Sesini Test Et
+            </button>
+          </div>
+        </div>
+
+        <!-- Admin Alt Sekmeleri -->
+        <div class="flex flex-wrap gap-2 border-b border-stonearch-200 pb-3">
+          <button type="button" onclick="switchAdminSubtab('orders')" data-subtab="orders" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer">
+            Aktif Siparişler
+          </button>
+          <button type="button" onclick="switchAdminSubtab('delivered')" data-subtab="delivered" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer">
+            Teslim Edilen Siparişler
+          </button>
+          <button type="button" onclick="switchAdminSubtab('users')" data-subtab="users" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer">
+            Müşteriler & Cari Borç
+          </button>
+          <button type="button" onclick="switchAdminSubtab('pricing')" data-subtab="pricing" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer">
+            Kasa, Sistem & Model Fiyat Yönetimi
+          </button>
+          <button type="button" onclick="switchAdminSubtab('galleryMgmt')" data-subtab="galleryMgmt" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer">
+            Galeri Yönetimi
+          </button>
+          <button type="button" onclick="switchAdminSubtab('database')" data-subtab="database" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer">
+            Gömülü Veritabanı Yöneticisi
+          </button>
+        </div>
+
+        <!-- Alt Sekme 1: Aktif Siparişler -->
+        <div id="admin-subtab-orders" class="admin-subtab-panel bg-white rounded-3xl border border-stonearch-200 p-5 sm:p-6 shadow-card space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-extrabold text-stonearch-950">Aktif Siparişler</h3>
+            <span class="text-xs text-stonearch-800/60">Sipariş numarasına göre gruplanmış aktif üretim listesi</span>
+          </div>
+          <div id="adminActiveOrdersContainer" class="space-y-4"></div>
+        </div>
+
+        <!-- Alt Sekme 2: Teslim Edilen Siparişler -->
+        <div id="admin-subtab-delivered" class="admin-subtab-panel hidden bg-white rounded-3xl border border-stonearch-200 p-5 sm:p-6 shadow-card space-y-4">
+          <h3 class="text-lg font-extrabold text-stonearch-950">Teslim Edilen Siparişler Arşivi (Durum: 4)</h3>
+          <div id="adminDeliveredOrdersContainer" class="space-y-4"></div>
+        </div>
+
+        <!-- Alt Sekme 3: Müşteriler & Cari Borç -->
+        <div id="admin-subtab-users" class="admin-subtab-panel hidden bg-white rounded-3xl border border-stonearch-200 p-5 sm:p-6 shadow-card space-y-4">
+          <div>
+            <h3 class="text-lg font-extrabold text-stonearch-950">Müşteriler & Cari Borç Yönetimi</h3>
+            <p class="text-xs text-stonearch-800/70">Ödeme alındığında girilen tutar müşterinin ödenmemiş sipariş borçlarından sırayla düşülür.</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr class="border-b border-stonearch-200 text-stonearch-800/70">
+                  <th class="py-3 px-2">Müşteri / Dükkan</th>
+                  <th class="py-3 px-2">İletişim</th>
+                  <th class="py-3 px-2">Toplam Sipariş</th>
+                  <th class="py-3 px-2">Kalan Cari Borç</th>
+                  <th class="py-3 px-2">Ödeme Al / Borç Düş</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersTableBody" class="divide-y divide-stonearch-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Alt Sekme 4: Kasa, Sistem & Model Fiyat Yönetimi -->
+        <div id="admin-subtab-pricing" class="admin-subtab-panel hidden space-y-6">
+          <!-- Yeni Seri & Model Kodu Ekle -->
+          <div class="bg-white rounded-3xl border border-stonearch-200 p-6 shadow-card space-y-4">
+            <h3 class="text-lg font-extrabold text-stonearch-950">Yeni Seri / Model Kodu Ekle</h3>
+            <form onsubmit="handleAddModel(event)" class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+              <input id="newModelSeries" type="text" required placeholder="Seri Adı (Örn: Orkide)" class="rounded-xl border border-stonearch-300 px-3.5 py-2 text-sm" />
+              <input id="newModelCode" type="text" required placeholder="Model Kodu (Örn: 3308)" class="rounded-xl border border-stonearch-300 px-3.5 py-2 text-sm" />
+              <input id="newModelPrice" type="number" min="1" step="0.01" required placeholder="m² Fiyatı (₺)" class="rounded-xl border border-stonearch-300 px-3.5 py-2 text-sm" />
+              <label class="flex items-center gap-2 text-xs font-semibold text-stonearch-800 px-2">
+                <input id="newModelIsTulle" type="checkbox" class="rounded border-stonearch-300 text-terracotta-600 focus:ring-terracotta-500" />
+                <span>Çiftli Sistem Model 2 (Tül)</span>
+              </label>
+              <button type="submit" class="rounded-xl bg-terracotta-600 hover:bg-terracotta-700 text-white font-bold text-sm py-2 px-4 cursor-pointer">
+                Model Ekle
+              </button>
+            </form>
+          </div>
+
+          <!-- Kayıtlı Modeller Tablosu -->
+          <div class="bg-white rounded-3xl border border-stonearch-200 p-6 shadow-card space-y-4">
+            <h3 class="text-base font-extrabold text-stonearch-950">Kayıtlı Seri ve Model Kodları</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                  <tr class="border-b border-stonearch-200 text-stonearch-800/70">
+                    <th class="py-2.5 px-2">Seri</th>
+                    <th class="py-2.5 px-2">Model Kodu</th>
+                    <th class="py-2.5 px-2">m² Fiyatı (₺)</th>
+                    <th class="py-2.5 px-2">Model 2 (Tül)</th>
+                    <th class="py-2.5 px-2">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody id="adminModelsTableBody" class="divide-y divide-stonearch-100"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Sistem Türleri & Kasa Renkleri -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-3xl border border-stonearch-200 p-6 shadow-card space-y-4">
+              <h3 class="text-base font-extrabold text-stonearch-950">Sistem Türleri & Ek Ücretler</h3>
+              <form onsubmit="handleAddSystem(event)" class="flex flex-wrap gap-2">
+                <input id="newSystemName" type="text" required placeholder="Sistem adı" class="flex-1 min-w-[150px] rounded-xl border border-stonearch-300 px-3 py-2 text-sm" />
+                <input id="newSystemPrice" type="number" step="0.01" required placeholder="Ek Ücret (₺)" class="w-28 rounded-xl border border-stonearch-300 px-3 py-2 text-sm" />
+                <button type="submit" class="rounded-xl bg-stonearch-900 text-white font-bold text-xs px-4 py-2 cursor-pointer">Ekle</button>
+              </form>
+              <div id="adminSystemsList" class="space-y-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl border border-stonearch-200 p-6 shadow-card space-y-4">
+              <h3 class="text-base font-extrabold text-stonearch-950">Kasa Renkleri</h3>
+              <form onsubmit="handleAddCase(event)" class="flex flex-wrap gap-2">
+                <input id="newCaseName" type="text" required placeholder="Kasa rengi" class="flex-1 min-w-[140px] rounded-xl border border-stonearch-300 px-3 py-2 text-sm" />
+                <input id="newCaseSwatch" type="color" value="#94a3b8" class="w-11 h-9 rounded-lg border border-stonearch-300 p-1 cursor-pointer" />
+                <button type="submit" class="rounded-xl bg-stonearch-900 text-white font-bold text-xs px-4 py-2 cursor-pointer">Ekle</button>
+              </form>
+              <div id="adminCasesList" class="space-y-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alt Sekme 5: Galeri Yönetimi (Base64 Yükleme) -->
+        <div id="admin-subtab-galleryMgmt" class="admin-subtab-panel hidden bg-white rounded-3xl border border-stonearch-200 p-6 shadow-card space-y-5">
+          <div>
+            <h3 class="text-lg font-extrabold text-stonearch-950">Galeri Yönetimi (Base64 Görsel Yükleme)</h3>
+            <p class="text-xs text-stonearch-800/70">Bilgisayarınızdan seçtiğiniz görseller base64 olarak gömülü veritabanına kaydedilir.</p>
+          </div>
+          <form onsubmit="handleAddGalleryItem(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center">
+            <input id="galTitle" type="text" required placeholder="Ürün / Kumaş Başlığı" class="rounded-xl border border-stonearch-300 px-3.5 py-2 text-sm" />
+            <input id="galSeries" type="text" required placeholder="Seri (Örn: Orkide)" class="rounded-xl border border-stonearch-300 px-3.5 py-2 text-sm" />
+            <input id="galFile" type="file" accept="image/*" class="text-xs text-stonearch-800 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-stonearch-100 file:text-stonearch-900 hover:file:bg-stonearch-200 cursor-pointer" />
+            <button type="submit" class="rounded-xl bg-terracotta-600 hover:bg-terracotta-700 text-white font-bold text-sm py-2 px-4 cursor-pointer">
+              Galeriye Ekle
+            </button>
+          </form>
+          <div id="adminGalleryList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- Alt Sekme 6: Gömülü Veritabanı Yöneticisi -->
+        <div id="admin-subtab-database" class="admin-subtab-panel hidden bg-white rounded-3xl border border-stonearch-200 p-6 shadow-card space-y-6">
+          <div>
+            <h3 class="text-lg font-extrabold text-stonearch-950">Gömülü Veritabanı Yöneticisi</h3>
+            <p class="text-xs text-stonearch-800/70 mt-1">
+              Veritabanı tarayıcı <code class="bg-stonearch-100 px-1.5 py-0.5 rounded">localStorage</code> (<code class="bg-stonearch-100 px-1.5 py-0.5 rounded">plise_perde_db_v1</code>) üzerinde tutulur. Tüm verileri tek bir taşınabilir <code class="bg-stonearch-100 px-1.5 py-0.5 rounded">.html</code> dosyası veya JSON yedeği olarak dışa aktarabilirsiniz.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <button type="button" onclick="exportDbJson()" class="p-4 rounded-2xl border border-stonearch-200 hover:border-stonearch-900 text-left transition cursor-pointer">
+              <div class="text-sm font-bold text-stonearch-950">JSON Yedeği İndir</div>
+              <div class="text-xs text-stonearch-800/60 mt-1">Tüm tabloları .json dosyası olarak kaydet</div>
+            </button>
+            <button type="button" onclick="downloadStandaloneSnapshot()" class="p-4 rounded-2xl border-2 border-terracotta-500 bg-terracotta-50/50 hover:bg-terracotta-50 text-left transition cursor-pointer">
+              <div class="text-sm font-bold text-terracotta-700">Taşınabilir .HTML Dışa Aktar</div>
+              <div class="text-xs text-terracotta-700/80 mt-1">Mevcut tüm sipariş, fiyat ve görseller gömülü tek dosya</div>
+            </button>
+            <button type="button" onclick="resetDatabaseToSeed()" class="p-4 rounded-2xl border border-red-200 hover:bg-red-50 text-left transition cursor-pointer">
+              <div class="text-sm font-bold text-red-700">Fabrikasyon Ayarlarına Sıfırla</div>
+              <div class="text-xs text-red-600/80 mt-1">Başlangıç veritabanına geri dön</div>
+            </button>
+          </div>
+
+          <div class="border-t border-stonearch-100 pt-5 space-y-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-stonearch-800">JSON Yedeği Yükle</label>
+            <input type="file" accept=".json,application/json" onchange="importDbJsonFile(event)" class="block text-xs text-stonearch-800 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-stonearch-900 file:text-white hover:file:bg-stonearch-800 cursor-pointer" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Sipariş Detay Modalı & Yazdırılabilir Sipariş Fişi / PDF Çıktısı -->
+  <div id="orderDetailModal" class="fixed inset-0 z-50 hidden bg-stonearch-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-stonearch-100 pb-3 no-print">
+        <h3 class="text-lg font-extrabold text-stonearch-950">Sipariş Detayı & Yazdırılabilir Sipariş Fişi</h3>
+        <button type="button" onclick="closeOrderModal()" class="w-8 h-8 rounded-full bg-stonearch-100 hover:bg-stonearch-200 flex items-center justify-center font-bold text-sm cursor-pointer">✕</button>
+      </div>
+
+      <!-- Admin Durum Güncelleme Seçicisi -->
+      <div id="modalAdminStatusBar" class="hidden rounded-2xl bg-stonearch-50 border border-stonearch-200 p-4 space-y-2 no-print">
+        <div class="text-xs font-bold uppercase tracking-wider text-stonearch-800">Sipariş Aşamasını Güncelle</div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="modalStatusOptions"></div>
+      </div>
+
+      <div id="printableArea" class="space-y-4 text-xs sm:text-sm"></div>
+
+      <div class="flex flex-wrap justify-end gap-2 pt-3 border-t border-stonearch-100 no-print">
+        <button type="button" onclick="window.print()" class="px-4 py-2 rounded-xl bg-stonearch-900 hover:bg-stonearch-800 text-white font-bold text-xs cursor-pointer">
+          Yazdır / PDF Çıktısı Al
+        </button>
+        <button type="button" onclick="closeOrderModal()" class="px-4 py-2 rounded-xl bg-stonearch-100 hover:bg-stonearch-200 text-stonearch-900 font-bold text-xs cursor-pointer">
+          Kapat
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tam Ekran Lightbox Galeri Modalı -->
+  <div id="galleryModal" class="fixed inset-0 z-50 hidden bg-stonearch-950/85 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeGalleryModal()">
+    <div class="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl" onclick="event.stopPropagation()">
+      <div id="galleryModalVisual" class="w-full h-80 sm:h-96 bg-stonearch-100 flex items-center justify-center overflow-hidden"></div>
+      <div class="p-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span id="galleryModalSeries" class="text-xs font-bold uppercase tracking-wider text-terracotta-600"></span>
+          <h4 id="galleryModalTitle" class="text-lg font-extrabold text-stonearch-950"></h4>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" id="galleryModalUseBtn" class="px-4 py-2 rounded-xl bg-terracotta-600 hover:bg-terracotta-700 text-white text-xs font-bold cursor-pointer">
+            Hesaplayıcıda Seç
+          </button>
+          <button type="button" onclick="closeGalleryModal()" class="px-3.5 py-2 rounded-xl bg-stonearch-100 text-stonearch-900 text-xs font-bold cursor-pointer">
+            Kapat
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-stonearch-950 text-stonearch-300 py-8 px-4 mt-12 border-t border-stonearch-800">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs">
+      <div class="space-y-1">
+        <div class="font-extrabold text-white text-sm">Plise Perde Sipariş & Yönetim Sistemi</div>
+        <div class="text-stonearch-400">Nenehatun, 41700 Darıca/Kocaeli • (534) 389-11-04 • info@pliseperde.com</div>
+      </div>
+      <div class="text-stonearch-400 md:text-right space-y-1">
+        <div>Tasarım & Geliştirme: <span class="text-stonearch-200 font-semibold">Uğur Akbaş</span></div>
+        <div>© <span id="footerYear"></span> Plise Perde — Tüm Hakları Saklıdır</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- GÖMÜLÜ BAŞLANGIÇ JSON VERİTABANI                                      -->
+  <!-- ===================================================================== -->
+  <script id="embedded-db-seed" type="application/json">
+  {
+    "meta": {
+      "brand": "Plise Perde",
+      "version": "1.0.0",
+      "minAreaM2": 1.0
+    },
+    "users": [
+      {
+        "id": 1,
+        "name": "Sistem",
+        "surname": "Yöneticisi",
+        "shop_name": "Plise Perde Merkez",
+        "phone": "(534) 389-11-04",
+        "address": "Nenehatun, 41700 Darıca/Kocaeli",
+        "email": "Admin@gmail.com",
+        "password": "987654321",
+        "role": "admin"
+      },
+      {
+        "id": 2,
+        "name": "Uğur",
+        "surname": "Akbaş",
+        "shop_name": "Akbaş Perde Sistemleri",
+        "phone": "(534) 389-11-04",
+        "address": "Nenehatun, 41700 Darıca/Kocaeli",
+        "email": "admin2@gmail.com",
+        "password": "1234",
+        "role": "user"
+      },
+      {
+        "id": 3,
+        "name": "Deneme",
+        "surname": "Müşteri",
+        "shop_name": "Deneme Dekorasyon",
+        "phone": "(532) 555-44-33",
+        "address": "İstasyon Cad. Gebze/Kocaeli",
+        "email": "deneme@gmail.com",
+        "password": "1234",
+        "role": "user"
+      }
+    ],
+    "cases": [
+      { "id": 1, "name": "Beyaz", "swatch": "#ffffff" },
+      { "id": 2, "name": "Kahverengi", "swatch": "#5c3a21" },
+      { "id": 3, "name": "Antrasit Gri", "swatch": "#374151" },
+      { "id": 4, "name": "Açık Gri", "swatch": "#cbd5e1" }
+    ],
+    "systems": [
+      { "id": 1, "name": "Normal Sistem", "extra_price": 0 },
+      { "id": 2, "name": "Çiftli Sistem", "extra_price": 0 },
+      { "id": 3, "name": "Portraylı Sistem", "extra_price": 100 },
+      { "id": 4, "name": "Yapışkanlı Sistem", "extra_price": 100 }
+    ],
+    "models": [
+      { "id": 1, "series": "Orkide", "code": "1101", "price_per_m2": 235, "is_model2": false },
+      { "id": 2, "series": "Orkide", "code": "1102", "price_per_m2": 235, "is_model2": false },
+      { "id": 3, "series": "Orkide", "code": "1103", "price_per_m2": 235, "is_model2": false },
+      { "id": 4, "series": "Akasya", "code": "2101", "price_per_m2": 245, "is_model2": false },
+      { "id": 5, "series": "Akasya", "code": "2102", "price_per_m2": 245, "is_model2": false },
+      { "id": 6, "series": "Lale", "code": "3101", "price_per_m2": 295, "is_model2": false },
+      { "id": 7, "series": "Lale", "code": "3102", "price_per_m2": 295, "is_model2": false },
+      { "id": 8, "series": "Karanfil", "code": "4101", "price_per_m2": 295, "is_model2": false },
+      { "id": 9, "series": "Karanfil", "code": "4102", "price_per_m2": 295, "is_model2": false },
+      { "id": 10, "series": "Sümbül", "code": "5101", "price_per_m2": 450, "is_model2": false },
+      { "id": 11, "series": "Sümbül", "code": "5102", "price_per_m2": 450, "is_model2": false },
+      { "id": 12, "series": "Zambak", "code": "6101", "price_per_m2": 565, "is_model2": false },
+      { "id": 13, "series": "Zambak", "code": "6102", "price_per_m2": 565, "is_model2": false },
+      { "id": 14, "series": "Yasemin", "code": "7101", "price_per_m2": 325, "is_model2": false },
+      { "id": 15, "series": "Yasemin", "code": "7102", "price_per_m2": 325, "is_model2": false },
+      { "id": 16, "series": "Menekşe", "code": "8101", "price_per_m2": 235, "is_model2": false },
+      { "id": 17, "series": "Menekşe", "code": "8102", "price_per_m2": 235, "is_model2": false },
+      { "id": 18, "series": "Tül Serisi", "code": "3301", "price_per_m2": 210, "is_model2": true },
+      { "id": 19, "series": "Tül Serisi", "code": "3302", "price_per_m2": 210, "is_model2": true },
+      { "id": 20, "series": "Tül Serisi", "code": "3303", "price_per_m2": 210, "is_model2": true },
+      { "id": 21, "series": "Tül Serisi", "code": "3304", "price_per_m2": 210, "is_model2": true },
+      { "id": 22, "series": "Tül Serisi", "code": "3306", "price_per_m2": 210, "is_model2": true },
+      { "id": 23, "series": "Tül Serisi", "code": "3501", "price_per_m2": 225, "is_model2": true },
+      { "id": 24, "series": "Tül Serisi", "code": "3502", "price_per_m2": 225, "is_model2": true },
+      { "id": 25, "series": "Tül Serisi", "code": "3503", "price_per_m2": 225, "is_model2": true },
+      { "id": 26, "series": "Tül Serisi", "code": "3505", "price_per_m2": 225, "is_model2": true }
+    ],
+    "gallery": [
+      { "id": 1, "title": "Orkide Serisi — Dokulu Krem Plise", "series": "Orkide", "image_base64": "", "accent": "#c85a32" },
+      { "id": 2, "title": "Akasya Serisi — Doğal Keten Plise", "series": "Akasya", "image_base64": "", "accent": "#9a6b3f" },
+      { "id": 3, "title": "Lale Serisi — Cam Balkon Uygulaması", "series": "Lale", "image_base64": "", "accent": "#2f6f4e" },
+      { "id": 4, "title": "Sümbül Serisi — Tül & Güneşlik Çiftli Sistem", "series": "Sümbül", "image_base64": "", "accent": "#475569" },
+      { "id": 5, "title": "Zambak Serisi — Tam Karartma Blackout", "series": "Zambak", "image_base64": "", "accent": "#181613" },
+      { "id": 6, "title": "Yasemin Serisi — Modern Ofis & Salon", "series": "Yasemin", "image_base64": "", "accent": "#b04823" }
+    ],
+    "orders": [
+      {
+        "id": 1001,
+        "user_id": 2,
+        "customer_name": "Uğur Akbaş",
+        "shop_name": "Akbaş Perde Sistemleri",
+        "phone": "(534) 389-11-04",
+        "status": 2,
+        "created_at": "2026-11-23 11:20",
+        "total_amount": 852.5,
+        "paid_amount": 0,
+        "items": [
+          {
+            "width": 110,
+            "height": 150,
+            "raw_area": 1.65,
+            "billed_area": 1.65,
+            "case_color": "Antrasit Gri",
+            "series": "Lale",
+            "model_code": "3101",
+            "model1_price": 295,
+            "system": "Çiftli Sistem",
+            "system_price": 0,
+            "extra_system": "Portraylı Sistem",
+            "extra_system_price": 100,
+            "model2_code": "3301",
+            "model2_price": 210,
+            "qty": 1,
+            "line_total": 852.5,
+            "note": "Salon orta pencere"
+          }
+        ]
+      },
+      {
+        "id": 1002,
+        "user_id": 3,
+        "customer_name": "Deneme Müşteri",
+        "shop_name": "Deneme Dekorasyon",
+        "phone": "(532) 555-44-33",
+        "status": 4,
+        "created_at": "2026-11-19 15:10",
+        "total_amount": 470,
+        "paid_amount": 470,
+        "items": [
+          {
+            "width": 80,
+            "height": 100,
+            "raw_area": 0.8,
+            "billed_area": 1.0,
+            "case_color": "Beyaz",
+            "series": "Orkide",
+            "model_code": "1101",
+            "model1_price": 235,
+            "system": "Normal Sistem",
+            "system_price": 0,
+            "extra_system": "",
+            "extra_system_price": 0,
+            "model2_code": "",
+            "model2_price": 0,
+            "qty": 2,
+            "line_total": 470,
+            "note": "Minimum 1 m² uygulandı"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <!-- ===================================================================== -->
+  <!-- ANA UYGULAMA MANTIĞI                                                  -->
+  <!-- ===================================================================== -->
+  <script>
+    const STORAGE_KEY = 'plise_perde_db_v1';
+    const CART_KEY = 'plise_perde_cart_v1';
+    const SESSION_KEY = 'plise_perde_session_v1';
+
+    const ORDER_STATUS_MAP = {
+      1: { label: 'Sipariş Alındı', badge: 'bg-amber-100 text-amber-800 border-amber-200' },
+      2: { label: 'Hazırlanıyor', badge: 'bg-sky-100 text-sky-800 border-sky-200' },
+      3: { label: 'Kargoya Verildi', badge: 'bg-purple-100 text-purple-800 border-purple-200' },
+      4: { label: 'Sipariş Tamamlandı', badge: 'bg-sage-100 text-sage-700 border-sage-200' }
+    };
+
+    let db = null;
+    let cart = [];
+    let currentUser = null;
+    let activeTab = 'order';
+    let activeAdminSubtab = 'orders';
+    let selectedGallerySeries = 'Tümü';
+    let activeModalOrderId = null;
+
+    // -----------------------------------------------------------------------
+    // YARDIMCI FONKSİYONLAR & WEB AUDIO ZİL SESİ
+    // -----------------------------------------------------------------------
+    function formatTRY(num) {
+      const val = Number(num) || 0;
+      return val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function playNotificationChime() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const notes = [587.33, 880]; // D5 -> A5 zil sesi
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.16);
+          gain.gain.setValueAtTime(0.001, ctx.currentTime + idx * 0.16);
+          gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + idx * 0.16 + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.16 + 0.55);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.16);
+          osc.stop(ctx.currentTime + idx * 0.16 + 0.6);
+        });
+      } catch (err) {
+        console.warn('Web Audio bildirimi çalınamadı:', err);
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const colors = {
+        success: 'bg-stonearch-950 text-white border-sage-600',
+        error: 'bg-red-700 text-white border-red-900',
+        info: 'bg-terracotta-700 text-white border-terracotta-900'
+      };
+      const el = document.createElement('div');
+      el.className = `pointer-events-auto rounded-2xl border-l-4 px-4 py-3 text-xs sm:text-sm font-semibold shadow-xl transition-all duration-300 ${colors[type] || colors.success}`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(8px)';
+        setTimeout(() => el.remove(), 250);
+      }, 3200);
+    }
+
+    // -----------------------------------------------------------------------
+    // GÖMÜLÜ VERİTABANI BAŞLATMA & KALICILIK
+    // -----------------------------------------------------------------------
+    function getSeedData() {
+      try {
+        const raw = document.getElementById('embedded-db-seed').textContent;
+        return JSON.parse(raw);
+      } catch (err) {
+        console.error('Gömülü veritabanı okunamadı:', err);
+        return { meta: { minAreaM2: 1 }, users: [], cases: [], systems: [], models: [], gallery: [], orders: [] };
+      }
+    }
+
+    function loadDatabase() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          db = JSON.parse(saved);
+        } else {
+          db = getSeedData();
+          saveDatabase();
+        }
+      } catch (err) {
+        console.error('Veritabanı okuma hatası:', err);
+        db = getSeedData();
+      }
+
+      try {
+        cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+      } catch {
+        cart = [];
+      }
+
+      try {
+        const sessionId = localStorage.getItem(SESSION_KEY);
+        if (sessionId) {
+          currentUser = db.users.find(u => String(u.id) === String(sessionId)) || null;
+        }
+      } catch {
+        currentUser = null;
+      }
+    }
+
+    function saveDatabase() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        updateDbStatsBadge();
+      } catch (err) {
+        console.error('Veritabanı kaydedilemedi:', err);
+        showToast('Veritabanı kaydedilirken depolama hatası oluştu.', 'error');
+      }
+    }
+
+    function saveCart() {
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+      renderCart();
+    }
+
+    function updateDbStatsBadge() {
+      const badge = document.getElementById('dbStatsBadge');
+      if (badge && db) {
+        badge.textContent = `${db.models.length} Model • ${db.orders.length} Sipariş • ${db.users.length} Hesap`;
+      }
+    }
+
+    function getUserDebtStats(userId) {
+      const userOrders = db.orders.filter(o => Number(o.user_id) === Number(userId));
+      let totalOrdered = 0;
+      let totalPaid = 0;
+      userOrders.forEach(o => {
+        const tot = Number(o.total_amount) || 0;
+        const paid = Number(o.paid_amount) || 0;
+        totalOrdered += tot;
+        totalPaid += Math.min(tot, paid);
+      });
+      const remainingDebt = Math.max(0, Number((totalOrdered - totalPaid).toFixed(2)));
+      return { totalOrdered, totalPaid, remainingDebt };
+    }
+
+    // -----------------------------------------------------------------------
+    // SEKME YÖNETİMİ
+    // -----------------------------------------------------------------------
+    function switchTab(tabName) {
+      activeTab = tabName;
+      document.querySelectorAll('.tab-content').forEach(sec => sec.classList.add('hidden'));
+      const target = document.getElementById(`tab-${tabName}`);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.dataset.tab === tabName;
+        btn.className = `tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+          isActive
+            ? 'bg-stonearch-950 text-white shadow-sm'
+            : 'text-stonearch-800 hover:bg-stonearch-200/70'
+        }`;
+      });
+
+      if (tabName === 'gallery') renderGallery();
+      if (tabName === 'account') renderAccountTab();
+      if (tabName === 'admin') renderAdminTab();
+      updateHeaderUserBox();
+    }
+
+    function updateHeaderUserBox() {
+      const box = document.getElementById('headerUserBox');
+      const lockIcon = document.getElementById('adminLockIcon');
+      if (currentUser) {
+        lockIcon.textContent = currentUser.role === 'admin' ? '🔓' : '🔒';
+        box.innerHTML = `
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="switchTab('account')" class="px-3 py-1.5 rounded-xl bg-stonearch-100 hover:bg-stonearch-200 text-xs font-bold text-stonearch-900 transition cursor-pointer">
+              ${escapeHtml(currentUser.name)} ${escapeHtml(currentUser.surname)}
+            </button>
+            <button type="button" onclick="handleLogout()" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition cursor-pointer">
+              Çıkış
+            </button>
+          </div>
+        `;
+      } else {
+        lockIcon.textContent = '🔒';
+        box.innerHTML = `
+          <button type="button" onclick="switchTab('account')" class="px-3.5 py-2 rounded-xl bg-terracotta-600 hover:bg-terracotta-700 text-white text-xs font-bold transition cursor-pointer">
+            Giriş / Kayıt
+          </button>
+        `;
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // SEKME 1: CANLI HESAPLAYICI & SEPET MANTIĞI
+    // -----------------------------------------------------------------------
+    function populateCalculatorOptions() {
+      const primaryModels = db.models.filter(m => !m.is_model2);
+      const seriesList = [...new Set(primaryModels.map(m => m.series))];
+
+      document.getElementById('heroSeriesCount').textContent = seriesList.length;
+      document.getElementById('heroSystemsCount').textContent = db.systems.length;
+
+      // Kasa Renkleri
+      const caseSelect = document.getElementById('calcCaseColor');
+      const casePills = document.getElementById('caseColorPills');
+      const prevCase = caseSelect.value;
+      caseSelect.innerHTML = '';
+      casePills.innerHTML = '';
+
+      db.cases.forEach((c, idx) => {
+        const opt = document.createElement('option');
+        opt.value = c.name;
+        opt.textContent = c.name;
+        if ((prevCase && prevCase === c.name) || (!prevCase && idx === 0)) opt.selected = true;
+        caseSelect.appendChild(opt);
+
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.dataset.caseName = c.name;
+        pill.onclick = () => {
+          caseSelect.value = c.name;
+          highlightCasePills();
+          recalculatePreview();
+        };
+        pill.className = 'case-pill flex items-center gap-2 p-2.5 rounded-xl border text-left transition cursor-pointer';
+        pill.innerHTML = `
+          <span class="w-4 h-4 rounded-full border border-stonearch-400 shrink-0" style="background:${c.swatch || '#e2e8f0'}"></span>
+          <span class="text-xs font-semibold text-stonearch-900 truncate">${escapeHtml(c.name)}</span>
+        `;
+        casePills.appendChild(pill);
+      });
+      highlightCasePills();
+
+      // Sistem Seçimi
+      const sysSelect = document.getElementById('calcSystem');
+      const prevSys = sysSelect.value;
+      sysSelect.innerHTML = '';
+      db.systems.forEach(sys => {
+        const opt = document.createElement('option');
+        opt.value = sys.name;
+        opt.textContent = `${sys.name} (+${formatTRY(sys.extra_price)})`;
+        sysSelect.appendChild(opt);
+      });
+      if (prevSys && db.systems.some(s => s.name === prevSys)) {
+        sysSelect.value = prevSys;
+      }
+
+      // Ekstra Sistem Seçimi (Çiftli Sistem hariç diğer sistemler)
+      const extraSysSelect = document.getElementById('calcExtraSystem');
+      const prevExtra = extraSysSelect.value;
+      extraSysSelect.innerHTML = '<option value="">Ekstra Sistem Yok (+0,00 ₺)</option>';
+      db.systems
+        .filter(s => !s.name.toLowerCase().includes('çiftli'))
+        .forEach(sys => {
+          const opt = document.createElement('option');
+          opt.value = sys.name;
+          opt.textContent = `${sys.name} (+${formatTRY(sys.extra_price)})`;
+          extraSysSelect.appendChild(opt);
+        });
+      if (prevExtra) extraSysSelect.value = prevExtra;
+
+      // Model 2 (Tül / İkinci Modeller)
+      const model2Select = document.getElementById('calcModel2');
+      const prevM2 = model2Select.value;
+      model2Select.innerHTML = '';
+      const tulleModels = db.models.filter(m => m.is_model2);
+      tulleModels.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.code;
+        opt.textContent = `${m.code} — ${formatTRY(m.price_per_m2)}/m²`;
+        model2Select.appendChild(opt);
+      });
+      if (prevM2 && tulleModels.some(m => m.code === prevM2)) {
+        model2Select.value = prevM2;
+      }
+
+      // Seri Seçimi
+      const seriesSelect = document.getElementById('calcSeries');
+      const prevSeries = seriesSelect.value;
+      seriesSelect.innerHTML = '';
+      seriesList.forEach(s => {
+        const sample = primaryModels.find(m => m.series === s);
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = `${s} (${formatTRY(sample ? sample.price_per_m2 : 0)}/m²)`;
+        seriesSelect.appendChild(opt);
+      });
+      if (prevSeries && seriesList.includes(prevSeries)) {
+        seriesSelect.value = prevSeries;
+      }
+
+      onSeriesChange();
+      onSystemChange();
+    }
+
+    function highlightCasePills() {
+      const selected = document.getElementById('calcCaseColor').value;
+      document.querySelectorAll('.case-pill').forEach(btn => {
+        if (btn.dataset.caseName === selected) {
+          btn.classList.add('border-terracotta-600', 'bg-terracotta-50', 'ring-2', 'ring-terracotta-500/30');
+          btn.classList.remove('border-stonearch-200', 'bg-white');
+        } else {
+          btn.classList.remove('border-terracotta-600', 'bg-terracotta-50', 'ring-2', 'ring-terracotta-500/30');
+          btn.classList.add('border-stonearch-200', 'bg-white');
+        }
+      });
+    }
+
+    function onSeriesChange() {
+      const selectedSeries = document.getElementById('calcSeries').value;
+      const modelSelect = document.getElementById('calcModel');
+      const filteredModels = db.models.filter(m => !m.is_model2 && m.series === selectedSeries);
+
+      modelSelect.innerHTML = '';
+      filteredModels.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.code;
+        opt.textContent = `${m.code} — ${formatTRY(m.price_per_m2)}/m²`;
+        modelSelect.appendChild(opt);
+      });
+      recalculatePreview();
+    }
+
+    function onSystemChange() {
+      const sysName = document.getElementById('calcSystem').value;
+      const panel = document.getElementById('doubleSystemPanel');
+      const isDouble = sysName.toLowerCase().includes('çiftli');
+      if (isDouble) {
+        panel.classList.remove('hidden');
+      } else {
+        panel.classList.add('hidden');
+      }
+      recalculatePreview();
+    }
+
+    function calculateCurrentLine() {
+      const width = Math.max(1, Number(document.getElementById('calcWidth').value) || 0);
+      const height = Math.max(1, Number(document.getElementById('calcHeight').value) || 0);
+      const qty = Math.max(1, Math.floor(Number(document.getElementById('calcQty').value) || 1));
+
+      const rawArea = Number(((width * height) / 10000).toFixed(4));
+      const minArea = Number(db.meta?.minAreaM2 || 1);
+      const isMinApplied = rawArea < minArea;
+      const billedArea = Number(Math.max(rawArea, minArea).toFixed(4));
+
+      const caseColor = document.getElementById('calcCaseColor').value;
+      const series = document.getElementById('calcSeries').value;
+      const modelCode = document.getElementById('calcModel').value;
+      const systemName = document.getElementById('calcSystem').value;
+      const isDouble = systemName.toLowerCase().includes('çiftli');
+
+      const extraSystemName = isDouble ? document.getElementById('calcExtraSystem').value : '';
+      const model2Code = isDouble ? document.getElementById('calcModel2').value : '';
+      const note = document.getElementById('calcNote').value.trim();
+
+      const model1Obj = db.models.find(m => !m.is_model2 && m.code === modelCode) || { price_per_m2: 0 };
+      const systemObj = db.systems.find(s => s.name === systemName) || { extra_price: 0 };
+      const extraSysObj = (isDouble && extraSystemName)
+        ? (db.systems.find(s => s.name === extraSystemName) || { extra_price: 0 })
+        : { extra_price: 0 };
+      const model2Obj = (isDouble && model2Code)
+        ? (db.models.find(m => m.is_model2 && m.code === model2Code) || { price_per_m2: 0 })
+        : { price_per_m2: 0 };
+
+      const model1Price = Number(model1Obj.price_per_m2 || 0);
+      const model2Price = isDouble ? Number(model2Obj.price_per_m2 || 0) : 0;
+      const systemPrice = Number(systemObj.extra_price || 0);
+      const extraSystemPrice = isDouble ? Number(extraSysObj.extra_price || 0) : 0;
+
+      // Formül: tutar = alan * adet * (sistemFiyat + model1Fiyat + model2Fiyat + ekstraSistemFiyat)
+      const rateSum = systemPrice + model1Price + model2Price + extraSystemPrice;
+      const lineTotal = Number((billedArea * qty * rateSum).toFixed(2));
+
+      return {
+        width,
+        height,
+        raw_area: rawArea,
+        billed_area: billedArea,
+        isMinApplied,
+        case_color: caseColor,
+        series,
+        model_code: modelCode,
+        model1_price: model1Price,
+        system: systemName,
+        system_price: systemPrice,
+        isDouble,
+        extra_system: extraSystemName,
+        extra_system_price: extraSystemPrice,
+        model2_code: model2Code,
+        model2_price: model2Price,
+        qty,
+        line_total: lineTotal,
+        note
+      };
+    }
+
+    function renderLivePlisseSvg(calc) {
+      const caseObj = db.cases.find(c => c.name === calc.case_color) || { swatch: '#ffffff' };
+      const frameColor = caseObj.swatch === '#ffffff' ? '#cbd5e1' : caseObj.swatch;
+      const ratio = calc.width / calc.height;
+      let w = 96, h = 96;
+      if (ratio > 1) {
+        h = Math.max(44, Math.min(96, Math.round(96 / ratio)));
+      } else {
+        w = Math.max(44, Math.min(96, Math.round(96 * ratio)));
+      }
+      const x = Math.round((110 - w) / 2);
+      const y = Math.round((110 - h) / 2);
+
+      let pleats = '';
+      const step = 7;
+      for (let py = y + 6; py < y + h - 4; py += step) {
+        pleats += `<line x1="${x + 3}" y1="${py}" x2="${x + w - 3}" y2="${py}" stroke="#c85a32" stroke-opacity="0.35" stroke-width="1.5" />`;
+      }
+
+      document.getElementById('livePlisseSvgContainer').innerHTML = `
+        <svg viewBox="0 0 110 110" class="w-full h-full">
+          <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#faf9f7" stroke="${frameColor}" stroke-width="3" />
+          ${pleats}
+          <rect x="${x - 1}" y="${y - 2}" width="${w + 2}" height="5" rx="2" fill="${frameColor}" />
+          <rect x="${x - 1}" y="${y + h - 3}" width="${w + 2}" height="5" rx="2" fill="${frameColor}" />
+          <rect x="${x + w / 2 - 22}" y="${y + h / 2 - 8}" width="44" height="16" rx="4" fill="#181613" fill-opacity="0.82" />
+          <text x="${x + w / 2}" y="${y + h / 2 + 3}" text-anchor="middle" font-family="Inter, sans-serif" font-size="8" font-weight="700" fill="#ffffff">${calc.width}×${calc.height}</text>
+        </svg>
+      `;
+    }
+
+    function recalculatePreview() {
+      const calc = calculateCurrentLine();
+
+      document.getElementById('rawAreaText').textContent = `${calc.raw_area.toFixed(2)} m²`;
+      document.getElementById('billedAreaText').textContent = `${calc.billed_area.toFixed(2)} m²`;
+      document.getElementById('previewCaseLabel').textContent = calc.case_color;
+      document.getElementById('previewQtyLabel').textContent = calc.qty;
+
+      document.getElementById('btnAddPriceTag').textContent = formatTRY(calc.line_total);
+      document.getElementById('calcGrandTotal').textContent = formatTRY(calc.line_total);
+
+      const badge = document.getElementById('minAreaBadge');
+      if (calc.isMinApplied) {
+        badge.textContent = `Min. ${Number(db.meta?.minAreaM2 || 1).toFixed(2)} m² Uygulandı`;
+        badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800';
+      } else {
+        badge.textContent = 'Standart Alan';
+        badge.className = 'text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700';
+      }
+
+      document.getElementById('breakdownModel1').textContent = formatTRY(calc.model1_price);
+      document.getElementById('breakdownSystem').textContent = formatTRY(calc.system_price);
+      document.getElementById('breakdownMultiplier').textContent = `${calc.billed_area.toFixed(2)} m² × ${calc.qty}`;
+
+      const m2Row = document.getElementById('breakdownModel2Row');
+      if (calc.isDouble) {
+        m2Row.classList.remove('hidden');
+        m2Row.classList.add('flex');
+        document.getElementById('breakdownModel2').textContent = formatTRY(calc.model2_price);
+      } else {
+        m2Row.classList.add('hidden');
+        m2Row.classList.remove('flex');
+      }
+
+      const exRow = document.getElementById('breakdownExtraRow');
+      if (calc.isDouble && calc.extra_system_price > 0) {
+        exRow.classList.remove('hidden');
+        exRow.classList.add('flex');
+        document.getElementById('breakdownExtra').textContent = formatTRY(calc.extra_system_price);
+      } else {
+        exRow.classList.add('hidden');
+        exRow.classList.remove('flex');
+      }
+
+      renderLivePlisseSvg(calc);
+    }
+
+    function resetCalculator() {
+      document.getElementById('calcWidth').value = 100;
+      document.getElementById('calcHeight').value = 150;
+      document.getElementById('calcQty').value = 1;
+      document.getElementById('calcNote').value = '';
+      if (db.cases.length) document.getElementById('calcCaseColor').value = db.cases[0].name;
+      highlightCasePills();
+      populateCalculatorOptions();
+      showToast('Hesaplayıcı sıfırlandı.', 'info');
+    }
+
+    function handleAddToCart(e) {
+      e.preventDefault();
+      const item = calculateCurrentLine();
+      if (item.width <= 0 || item.height <= 0) {
+        showToast('Lütfen geçerli en ve boy ölçüleri girin.', 'error');
+        return;
+      }
+      cart.push({
+        uid: Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+        ...item
+      });
+      saveCart();
+      showToast(`${item.series} (${item.model_code}) — ${item.qty} adet sepete eklendi.`);
+    }
+
+    function removeCartItem(uid) {
+      cart = cart.filter(i => i.uid !== uid);
+      saveCart();
+      showToast('Kalem sepetten çıkarıldı.', 'info');
+    }
+
+    function clearCart() {
+      cart = [];
+      saveCart();
+      showToast('Sepet temizlendi.', 'info');
+    }
+
+    function renderCart() {
+      const count = cart.reduce((acc, item) => acc + Number(item.qty || 1), 0);
+      document.getElementById('cartCountLabel').textContent = count;
+      const navBadge = document.getElementById('navCartCount');
+      if (count > 0) {
+        navBadge.textContent = count;
+        navBadge.classList.remove('hidden');
+      } else {
+        navBadge.classList.add('hidden');
+      }
+
+      const listEl = document.getElementById('cartItemsList');
+      const checkoutBox = document.getElementById('cartCheckoutBox');
+
+      if (cart.length === 0) {
+        listEl.innerHTML = `
+          <div class="rounded-2xl border border-dashed border-stonearch-300 p-6 text-center text-xs text-stonearch-800/60">
+            Sepetiniz şu an boş. Sol taraftaki hesaplayıcıdan ürün ekleyebilirsiniz.
+          </div>
+        `;
+        checkoutBox.classList.add('hidden');
+        return;
+      }
+
+      checkoutBox.classList.remove('hidden');
+      let grandTotal = 0;
+
+      listEl.innerHTML = cart.map(item => {
+        grandTotal += Number(item.line_total || 0);
+        return `
+          <div class="rounded-2xl border border-stonearch-200 bg-stonearch-50/70 p-3.5 space-y-1.5">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="text-xs sm:text-sm font-bold text-stonearch-950">
+                  ${escapeHtml(item.series)} • Kod: ${escapeHtml(item.model_code)} <span class="text-terracotta-600">×${item.qty}</span>
+                </div>
+                <div class="text-[11px] text-stonearch-800/75">
+                  ${item.width}×${item.height} cm (${item.billed_area.toFixed(2)} m²) • ${escapeHtml(item.case_color)} • ${escapeHtml(item.system)}
+                </div>
+                ${item.isDouble ? `<div class="text-[11px] text-terracotta-700 font-medium">Model 2: ${escapeHtml(item.model2_code)} ${item.extra_system ? '• Ekstra: ' + escapeHtml(item.extra_system) : ''}</div>` : ''}
+                ${item.note ? `<div class="text-[11px] italic text-stonearch-800/60">Not: ${escapeHtml(item.note)}</div>` : ''}
+              </div>
+              <button type="button" onclick="removeCartItem('${item.uid}')" class="text-xs text-red-600 hover:bg-red-50 px-2 py-1 rounded-lg font-bold cursor-pointer">✕</button>
+            </div>
+            <div class="flex justify-end text-xs font-extrabold text-stonearch-950 pt-1 border-t border-stonearch-200/70">
+              ${formatTRY(item.line_total)}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('cartTotalAmount').textContent = formatTRY(grandTotal);
+
+      const notice = document.getElementById('checkoutUserNotice');
+      if (currentUser) {
+        notice.innerHTML = `Sipariş <strong>${escapeHtml(currentUser.name)} ${escapeHtml(currentUser.surname)}</strong> (${escapeHtml(currentUser.shop_name)}) adına oluşturulacaktır.`;
+      } else {
+        notice.innerHTML = `Siparişi tamamlamak için <button type="button" onclick="switchTab('account')" class="underline font-bold text-terracotta-600 cursor-pointer">giriş yapın</button> veya tek tıkla demo hesabı kullanın.`;
+      }
+    }
+
+    function confirmOrderFromCart() {
+      if (cart.length === 0) {
+        showToast('Sepetiniz boş.', 'error');
+        return;
+      }
+      if (!currentUser) {
+        showToast('Sipariş vermek için önce giriş yapmalısınız.', 'info');
+        switchTab('account');
+        return;
+      }
+
+      const totalAmount = Number(cart.reduce((s, i) => s + Number(i.line_total || 0), 0).toFixed(2));
+      const nextId = db.orders.length > 0 ? Math.max(...db.orders.map(o => Number(o.id) || 1000)) + 1 : 1001;
+      const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+      const newOrder = {
+        id: nextId,
+        user_id: currentUser.id,
+        customer_name: `${currentUser.name} ${currentUser.surname}`,
+        shop_name: currentUser.shop_name,
+        phone: currentUser.phone,
+        status: 1,
+        created_at: nowStr,
+        total_amount: totalAmount,
+        paid_amount: 0,
+        items: JSON.parse(JSON.stringify(cart))
+      };
+
+      db.orders.unshift(newOrder);
+      saveDatabase();
+      cart = [];
+      saveCart();
+      playNotificationChime();
+      showToast(`Sipariş #${nextId} başarıyla oluşturuldu!`);
+      switchTab('account');
+    }
+
+    // -----------------------------------------------------------------------
+    // SEKME 2: ÜRÜN GALERİSİ & LIGHTBOX
+    // -----------------------------------------------------------------------
+    function buildGallerySvg(item) {
+      const accent = item.accent || '#c85a32';
+      return `
+        <svg class="w-full h-full object-cover" viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="260" fill="#f3f0ea"/>
+          <rect x="45" y="28" width="310" height="194" rx="14" fill="#ffffff" stroke="#d2c8b6" stroke-width="2"/>
+          <line x1="75" y1="28" x2="75" y2="222" stroke="${accent}" stroke-opacity="0.35" stroke-width="6"/>
+          <line x1="115" y1="28" x2="115" y2="222" stroke="${accent}" stroke-opacity="0.55" stroke-width="6"/>
+          <line x1="155" y1="28" x2="155" y2="222" stroke="${accent}" stroke-opacity="0.35" stroke-width="6"/>
+          <line x1="195" y1="28" x2="195" y2="222" stroke="${accent}" stroke-opacity="0.55" stroke-width="6"/>
+          <line x1="235" y1="28" x2="235" y2="222" stroke="${accent}" stroke-opacity="0.35" stroke-width="6"/>
+          <line x1="275" y1="28" x2="275" y2="222" stroke="${accent}" stroke-opacity="0.55" stroke-width="6"/>
+          <line x1="315" y1="28" x2="315" y2="222" stroke="${accent}" stroke-opacity="0.35" stroke-width="6"/>
+          <rect x="35" y="20" width="330" height="14" rx="5" fill="${accent}"/>
+          <text x="200" y="246" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#272420">${escapeHtml(item.series)} Serisi</text>
+        </svg>
+      `;
+    }
+
+    function renderGallery() {
+      const seriesNames = ['Tümü', ...new Set(db.gallery.map(g => g.series))];
+      const filterWrap = document.getElementById('galleryFilterButtons');
+      filterWrap.innerHTML = seriesNames.map(s => {
+        const active = selectedGallerySeries === s;
+        return `<button type="button" onclick="selectGalleryFilter('${escapeHtml(s)}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+          active ? 'bg-terracotta-600 text-white' : 'bg-stonearch-100 text-stonearch-800 hover:bg-stonearch-200'
+        }">${escapeHtml(s)}</button>`;
+      }).join('');
+
+      const query = (document.getElementById('gallerySearchInput')?.value || '').trim().toLowerCase();
+      let items = selectedGallerySeries === 'Tümü'
+        ? db.gallery
+        : db.gallery.filter(g => g.series === selectedGallerySeries);
+
+      if (query) {
+        items = items.filter(g =>
+          g.title.toLowerCase().includes(query) || g.series.toLowerCase().includes(query)
+        );
+      }
+
+      const grid = document.getElementById('galleryGrid');
+      if (items.length === 0) {
+        grid.innerHTML = `<div class="col-span-full bg-white rounded-3xl border border-stonearch-200 p-10 text-center text-sm text-stonearch-800/70">Aramanıza uygun galeri kartı bulunamadı.</div>`;
+        return;
+      }
+
+      grid.innerHTML = items.map(item => {
+        const mediaHtml = item.image_base64
+          ? `<img src="${item.image_base64}" alt="${escapeHtml(item.title)}" class="w-full h-52 object-cover" />`
+          : buildGallerySvg(item);
+
+        return `
+          <div class="bg-white rounded-3xl border border-stonearch-200 overflow-hidden shadow-card hover:shadow-soft transition group flex flex-col justify-between">
+            <div>
+              <div onclick="openGalleryModal(${item.id})" class="h-52 bg-stonearch-100 overflow-hidden cursor-pointer relative">
+                ${mediaHtml}
+                <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/90 text-stonearch-950 text-[11px] font-bold shadow-xs">${escapeHtml(item.series)}</span>
+              </div>
+              <div class="p-5">
+                <h3 class="text-base font-bold text-stonearch-950 group-hover:text-terracotta-600 transition">${escapeHtml(item.title)}</h3>
+              </div>
+            </div>
+            <div class="px-5 pb-5 flex gap-2">
+              <button type="button" onclick="openGalleryModal(${item.id})" class="flex-1 py-2 rounded-xl bg-stonearch-100 hover:bg-stonearch-200 text-stonearch-900 text-xs font-bold transition cursor-pointer">
+                Tam Ekran İncele
+              </button>
+              <button type="button" onclick="applySeriesToCalculator('${escapeHtml(item.series)}')" class="flex-1 py-2 rounded-xl bg-terracotta-600 hover:bg-terracotta-700 text-white text-xs font-bold transition cursor-pointer">
+                Seriyi Seç
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectGalleryFilter(series) {
+      selectedGallerySeries = series;
+      renderGallery();
+    }
+
+    function openGalleryModal(id) {
+      const item = db.gallery.find(g => g.id === id);
+      if (!item) return;
+      document.getElementById('galleryModalSeries').textContent = `${item.series} Serisi`;
+      document.getElementById('galleryModalTitle').textContent = item.title;
+      const visual = document.getElementById('galleryModalVisual');
+      visual.innerHTML = item.image_base64
+        ? `<img src="${item.image_base64}" alt="${escapeHtml(item.title)}" class="w-full h-full object-contain bg-stonearch-950" />`
+        : buildGallerySvg(item);
+      document.getElementById('galleryModalUseBtn').onclick = () => {
+        closeGalleryModal();
+        applySeriesToCalculator(item.series);
+      };
+      document.getElementById('galleryModal').classList.remove('hidden');
+    }
+
+    function closeGalleryModal() {
+      document.getElementById('galleryModal').classList.add('hidden');
+    }
+
+    function applySeriesToCalculator(seriesName) {
+      const seriesSelect = document.getElementById('calcSeries');
+      const exists = [...seriesSelect.options].some(o => o.value === seriesName);
+      switchTab('order');
+      if (exists) {
+        seriesSelect.value = seriesName;
+        onSeriesChange();
+        showToast(`${seriesName} serisi hesaplayıcıda seçildi.`);
+      } else {
+        showToast(`${seriesName} serisi için aktif model bulunamadı.`, 'info');
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // SEKME 3: SİPARİŞLERİM & HESAP
+    // -----------------------------------------------------------------------
+    function quickLogin(email, password) {
+      const emailInput = document.getElementById('loginEmail');
+      const passInput = document.getElementById('loginPassword');
+      if (emailInput) emailInput.value = email;
+      if (passInput) passInput.value = password;
+
+      const found = db.users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      if (!found) {
+        showToast('Demo hesap bulunamadı.', 'error');
+        return;
+      }
+      currentUser = found;
+      localStorage.setItem(SESSION_KEY, String(found.id));
+      showToast(`Hoş geldiniz, ${found.name} ${found.surname}!`);
+      updateHeaderUserBox();
+      renderCart();
+      renderAccountTab();
+      if (found.role === 'admin') {
+        renderAdminTab();
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value;
+      const user = db.users.find(u => u.email.toLowerCase() === email && u.password === password);
+      if (!user) {
+        showToast('E-posta veya şifre hatalı!', 'error');
+        return;
+      }
+      currentUser = user;
+      localStorage.setItem(SESSION_KEY, String(user.id));
+      showToast(`Giriş başarılı: ${user.name} ${user.surname}`);
+      updateHeaderUserBox();
+      renderCart();
+      renderAccountTab();
+      if (user.role === 'admin') renderAdminTab();
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      if (db.users.some(u => u.email.toLowerCase() === email)) {
+        showToast('Bu e-posta adresi zaten kayıtlı.', 'error');
+        return;
+      }
+      const nextId = db.users.length > 0 ? Math.max(...db.users.map(u => Number(u.id) || 0)) + 1 : 1;
+      const newUser = {
+        id: nextId,
+        name: document.getElementById('regName').value.trim(),
+        surname: document.getElementById('regSurname').value.trim(),
+        shop_name: document.getElementById('regShop').value.trim(),
+        phone: document.getElementById('regPhone').value.trim(),
+        address: document.getElementById('regAddress').value.trim(),
+        email,
+        password: document.getElementById('regPassword').value,
+        role: 'user'
+      };
+      db.users.push(newUser);
+      saveDatabase();
+      currentUser = newUser;
+      localStorage.setItem(SESSION_KEY, String(newUser.id));
+      showToast('Kaydınız tamamlandı ve giriş yapıldı!');
+      e.target.reset();
+      updateHeaderUserBox();
+      renderCart();
+      renderAccountTab();
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem(SESSION_KEY);
+      showToast('Oturum kapatıldı.', 'info');
+      updateHeaderUserBox();
+      renderCart();
+      renderAccountTab();
+      renderAdminTab();
+    }
+
+    function renderAccountTab() {
+      const authContainer = document.getElementById('authViewsContainer');
+      const dashContainer = document.getElementById('userDashboardContainer');
+
+      if (!currentUser) {
+        authContainer.classList.remove('hidden');
+        dashContainer.classList.add('hidden');
+        return;
+      }
+
+      authContainer.classList.add('hidden');
+      dashContainer.classList.remove('hidden');
+
+      const debtStats = getUserDebtStats(currentUser.id);
+      document.getElementById('profileRoleBadge').textContent = `${currentUser.email} • ${currentUser.role === 'admin' ? 'Yönetici' : 'Müşteri / Bayi'}`;
+      document.getElementById('profileDebtAmount').textContent = formatTRY(debtStats.remainingDebt);
+
+      document.getElementById('profName').value = currentUser.name || '';
+      document.getElementById('profSurname').value = currentUser.surname || '';
+      document.getElementById('profEmail').value = currentUser.email || '';
+      document.getElementById('profShop').value = currentUser.shop_name || '';
+      document.getElementById('profPhone').value = currentUser.phone || '';
+      document.getElementById('profAddress').value = currentUser.address || '';
+      document.getElementById('profPassword').value = '';
+
+      const myOrders = currentUser.role === 'admin'
+        ? db.orders
+        : db.orders.filter(o => Number(o.user_id) === Number(currentUser.id));
+
+      document.getElementById('userOrdersCount').textContent = `${myOrders.length} Sipariş`;
+      const listEl = document.getElementById('userOrdersList');
+
+      if (myOrders.length === 0) {
+        listEl.innerHTML = `<div class="rounded-2xl border border-dashed border-stonearch-300 p-8 text-center text-sm text-stonearch-800/60">Henüz kayıtlı siparişiniz bulunmuyor.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = myOrders.map(ord => {
+        const st = ORDER_STATUS_MAP[ord.status] || ORDER_STATUS_MAP[1];
+        const rem = Math.max(0, (Number(ord.total_amount) || 0) - (Number(ord.paid_amount) || 0));
+        return `
+          <div class="rounded-2xl border border-stonearch-200 bg-stonearch-50/50 p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span class="text-sm font-extrabold text-stonearch-950">Sipariş #${ord.id}</span>
+                <span class="text-xs text-stonearch-800/60 ml-2">${escapeHtml(ord.created_at)}</span>
+              </div>
+              <span class="px-3 py-1 rounded-full text-xs font-bold border ${st.badge}">${st.label}</span>
+            </div>
+
+            <div class="grid grid-cols-4 gap-1.5 pt-1">
+              ${[1, 2, 3, 4].map(stepNum => `
+                <div class="h-1.5 rounded-full ${ord.status >= stepNum ? 'bg-terracotta-600' : 'bg-stonearch-200'}"></div>
+              `).join('')}
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+              <div class="text-stonearch-800/80">
+                ${ord.items?.length || 0} kalem • Kalan Borç: <strong>${formatTRY(rem)}</strong>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="font-extrabold text-sm text-stonearch-950">${formatTRY(ord.total_amount)}</span>
+                <button type="button" onclick="openOrderDetailModal(${ord.id})" class="px-3 py-1.5 rounded-xl bg-white border border-stonearch-300 hover:border-stonearch-900 font-bold text-stonearch-900 cursor-pointer">
+                  Detay & Fiş
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleProfileUpdate(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+      const userObj = db.users.find(u => u.id === currentUser.id);
+      if (!userObj) return;
+
+      userObj.name = document.getElementById('profName').value.trim();
+      userObj.surname = document.getElementById('profSurname').value.trim();
+      userObj.email = document.getElementById('profEmail').value.trim();
+      userObj.shop_name = document.getElementById('profShop').value.trim();
+      userObj.phone = document.getElementById('profPhone').value.trim();
+      userObj.address = document.getElementById('profAddress').value.trim();
+      const newPass = document.getElementById('profPassword').value;
+      if (newPass.trim()) {
+        userObj.password = newPass.trim();
+      }
+      currentUser = userObj;
+      saveDatabase();
+      updateHeaderUserBox();
+      renderAccountTab();
+      showToast('Profil bilgileriniz güncellendi.');
+    }
+
+    // -----------------------------------------------------------------------
+    // SEKME 4: YÖNETİM PANELİ (ADMİN)
+    // -----------------------------------------------------------------------
+    function renderAdminTab() {
+      const gate = document.getElementById('adminGateCard');
+      const workspace = document.getElementById('adminWorkspace');
+
+      if (!currentUser || currentUser.role !== 'admin') {
+        gate.classList.remove('hidden');
+        workspace.classList.add('hidden');
+        return;
+      }
+
+      gate.classList.add('hidden');
+      workspace.classList.remove('hidden');
+
+      const activeOrders = db.orders.filter(o => Number(o.status) < 4);
+      const deliveredOrders = db.orders.filter(o => Number(o.status) === 4);
+      const totalDebt = db.users.reduce((sum, u) => sum + getUserDebtStats(u.id).remainingDebt, 0);
+
+      document.getElementById('statActiveOrders').textContent = activeOrders.length;
+      document.getElementById('statDeliveredOrders').textContent = deliveredOrders.length;
+      document.getElementById('statTotalDebt').textContent = formatTRY(totalDebt);
+
+      switchAdminSubtab(activeAdminSubtab);
+    }
+
+    function switchAdminSubtab(sub) {
+      activeAdminSubtab = sub;
+      document.querySelectorAll('.admin-subtab-panel').forEach(p => p.classList.add('hidden'));
+      const panel = document.getElementById(`admin-subtab-${sub}`);
+      if (panel) panel.classList.remove('hidden');
+
+      document.querySelectorAll('.admin-subtab-btn').forEach(btn => {
+        const active = btn.dataset.subtab === sub;
+        btn.className = `admin-subtab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+          active ? 'bg-terracotta-600 text-white' : 'bg-white border border-stonearch-200 text-stonearch-800 hover:bg-stonearch-100'
+        }`;
+      });
+
+      if (sub === 'orders') renderAdminOrdersList('adminActiveOrdersContainer', db.orders.filter(o => Number(o.status) < 4));
+      if (sub === 'delivered') renderAdminOrdersList('adminDeliveredOrdersContainer', db.orders.filter(o => Number(o.status) === 4));
+      if (sub === 'users') renderAdminUsersTable();
+      if (sub === 'pricing') renderAdminPricingPanels();
+      if (sub === 'galleryMgmt') renderAdminGalleryList();
+    }
+
+    function renderAdminOrdersList(containerId, list) {
+      const container = document.getElementById(containerId);
+      if (!list || list.length === 0) {
+        container.innerHTML = `<div class="rounded-2xl border border-dashed border-stonearch-300 p-8 text-center text-sm text-stonearch-800/60">Bu kategoride sipariş bulunmuyor.</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(ord => {
+        const st = ORDER_STATUS_MAP[ord.status] || ORDER_STATUS_MAP[1];
+        return `
+          <div class="rounded-2xl border border-stonearch-200 bg-stonearch-50/50 p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span class="text-sm font-extrabold text-stonearch-950">Sipariş #${ord.id} — ${escapeHtml(ord.customer_name)}</span>
+                <span class="text-xs font-semibold text-terracotta-700 ml-2">(${escapeHtml(ord.shop_name)})</span>
+                <div class="text-[11px] text-stonearch-800/60">${escapeHtml(ord.created_at)} • Tel: ${escapeHtml(ord.phone)}</div>
+              </div>
+              <span class="px-3 py-1 rounded-full text-xs font-bold border ${st.badge}">${st.label}</span>
+            </div>
+
+            <div class="text-xs text-stonearch-800 bg-white rounded-xl p-3 border border-stonearch-100 space-y-1">
+              ${(ord.items || []).map(it => `
+                <div>• <strong>${escapeHtml(it.series)} (${escapeHtml(it.model_code)})</strong> — ${it.width}×${it.height} cm (${Number(it.billed_area || 1).toFixed(2)} m²) • ${escapeHtml(it.case_color)} • ${escapeHtml(it.system)} ×${it.qty} = <strong>${formatTRY(it.line_total)}</strong></div>
+              `).join('')}
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div class="text-sm font-extrabold text-stonearch-950">Toplam: ${formatTRY(ord.total_amount)}</div>
+              <div class="flex flex-wrap items-center gap-2">
+                <select onchange="updateOrderStatus(${ord.id}, this.value)" class="rounded-xl border border-stonearch-300 bg-white px-3 py-1.5 text-xs font-bold text-stonearch-900">
+                  <option value="1" ${ord.status === 1 ? 'selected' : ''}>1 - Sipariş Alındı</option>
+                  <option value="2" ${ord.status === 2 ? 'selected' : ''}>2 - Hazırlanıyor</option>
+                  <option value="3" ${ord.status === 3 ? 'selected' : ''}>3 - Kargoya Verildi</option>
+                  <option value="4" ${ord.status === 4 ? 'selected' : ''}>4 - Sipariş Tamamlandı</option>
+                </select>
+                <button type="button" onclick="openOrderDetailModal(${ord.id})" class="px-3 py-1.5 rounded-xl bg-stonearch-900 text-white text-xs font-bold cursor-pointer">
+                  Detay & Fiş / PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateOrderStatus(orderId, newStatusVal) {
+      const ord = db.orders.find(o => Number(o.id) === Number(orderId));
+      if (!ord) return;
+      ord.status = Number(newStatusVal);
+      saveDatabase();
+      renderAdminTab();
+      if (activeModalOrderId === ord.id) {
+        openOrderDetailModal(ord.id);
+      }
+      showToast(`Sipariş #${orderId} durumu güncellendi: ${ORDER_STATUS_MAP[ord.status].label}`);
+    }
+
+    function renderAdminUsersTable() {
+      const tbody = document.getElementById('adminUsersTableBody');
+      tbody.innerHTML = db.users.map(u => {
+        const stats = getUserDebtStats(u.id);
+        return `
+          <tr>
+            <td class="py-3 px-2">
+              <div class="font-bold text-stonearch-950">${escapeHtml(u.name)} ${escapeHtml(u.surname)}</div>
+              <div class="text-xs text-stonearch-800/70">${escapeHtml(u.shop_name)}</div>
+            </td>
+            <td class="py-3 px-2 text-xs">
+              <div>${escapeHtml(u.email)}</div>
+              <div class="text-stonearch-800/70">${escapeHtml(u.phone)}</div>
+            </td>
+            <td class="py-3 px-2 text-xs font-semibold text-stonearch-800">
+              ${formatTRY(stats.totalOrdered)}
+            </td>
+            <td class="py-3 px-2 font-extrabold ${stats.remainingDebt > 0 ? 'text-terracotta-600' : 'text-sage-700'}">
+              ${formatTRY(stats.remainingDebt)}
+            </td>
+            <td class="py-3 px-2">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <input id="payAmt-${u.id}" type="number" min="0.01" step="0.01" placeholder="Tutar ₺" class="w-24 rounded-lg border border-stonearch-300 px-2 py-1 text-xs" />
+                <button type="button" onclick="deductUserDebtSequential(${u.id})" class="px-2.5 py-1 rounded-lg bg-sage-700 hover:bg-sage-600 text-white text-xs font-bold cursor-pointer">
+                  Ödeme Al / Borç Düş
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function deductUserDebtSequential(userId) {
+      const input = document.getElementById(`payAmt-${userId}`);
+      let payment = Number(input?.value || 0);
+      if (payment <= 0) {
+        showToast('Lütfen geçerli bir ödeme tutarı girin.', 'error');
+        return;
+      }
+
+      // Kullanıcının sipariş borçlarından eskiden yeniye doğru sırayla düş
+      const userOrders = db.orders
+        .filter(o => Number(o.user_id) === Number(userId))
+        .slice()
+        .reverse();
+
+      let appliedTotal = 0;
+      userOrders.forEach(ord => {
+        if (payment <= 0) return;
+        const total = Number(ord.total_amount) || 0;
+        const paid = Number(ord.paid_amount) || 0;
+        const unpaid = Math.max(0, Number((total - paid).toFixed(2)));
+        if (unpaid > 0) {
+          const deduction = Math.min(unpaid, payment);
+          ord.paid_amount = Number((paid + deduction).toFixed(2));
+          payment = Number((payment - deduction).toFixed(2));
+          appliedTotal = Number((appliedTotal + deduction).toFixed(2));
+        }
+      });
+
+      if (appliedTotal <= 0) {
+        showToast('Bu müşterinin açık sipariş borcu bulunmuyor.', 'info');
+        return;
+      }
+
+      saveDatabase();
+      renderAdminTab();
+      showToast(`Sipariş borçlarından sırayla ${formatTRY(appliedTotal)} düşüldü.`);
+    }
+
+    function renderAdminPricingPanels() {
+      const mBody = document.getElementById('adminModelsTableBody');
+      mBody.innerHTML = db.models.map(m => `
+        <tr>
+          <td class="py-2 px-2 font-semibold">${escapeHtml(m.series)}</td>
+          <td class="py-2 px-2 font-bold">${escapeHtml(m.code)}</td>
+          <td class="py-2 px-2">
+            <input id="modelPrice-${m.id}" type="number" min="1" step="0.01" value="${m.price_per_m2}" class="w-28 rounded-lg border border-stonearch-300 px-2 py-1 text-xs font-semibold" />
+          </td>
+          <td class="py-2 px-2 text-xs">${m.is_model2 ? 'Evet (Model 2)' : 'Hayır'}</td>
+          <td class="py-2 px-2 flex gap-1.5">
+            <button type="button" onclick="updateModelPrice(${m.id})" class="px-2.5 py-1 rounded-lg bg-stonearch-900 text-white text-xs font-bold cursor-pointer">Kaydet</button>
+            <button type="button" onclick="deleteModel(${m.id})" class="px-2.5 py-1 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 text-xs font-bold cursor-pointer">Sil</button>
+          </td>
+        </tr>
+      `).join('');
+
+      const sysList = document.getElementById('adminSystemsList');
+      sysList.innerHTML = db.systems.map(s => `
+        <div class="flex items-center justify-between gap-2 rounded-xl bg-stonearch-50 border border-stonearch-200 px-3 py-2 text-xs">
+          <span class="font-bold text-stonearch-900">${escapeHtml(s.name)}</span>
+          <div class="flex items-center gap-1.5">
+            <input id="sysPrice-${s.id}" type="number" step="0.01" value="${s.extra_price}" class="w-20 rounded-lg border border-stonearch-300 px-2 py-1 text-xs" />
+            <button type="button" onclick="updateSystemPrice(${s.id})" class="px-2 py-1 rounded-lg bg-stonearch-900 text-white font-bold cursor-pointer">Kaydet</button>
+            <button type="button" onclick="deleteSystem(${s.id})" class="px-2 py-1 rounded-lg bg-red-50 text-red-700 font-bold cursor-pointer">✕</button>
+          </div>
+        </div>
+      `).join('');
+
+      const caseList = document.getElementById('adminCasesList');
+      caseList.innerHTML = db.cases.map(c => `
+        <div class="flex items-center justify-between gap-2 rounded-xl bg-stonearch-50 border border-stonearch-200 px-3 py-2 text-xs">
+          <div class="flex items-center gap-2 font-bold text-stonearch-900">
+            <span class="w-3.5 h-3.5 rounded-full border border-stonearch-400" style="background:${c.swatch || '#e2e8f0'}"></span>
+            <span>${escapeHtml(c.name)}</span>
+          </div>
+          <button type="button" onclick="deleteCase(${c.id})" class="px-2 py-1 rounded-lg bg-red-50 text-red-700 font-bold cursor-pointer">Sil</button>
+        </div>
+      `).join('');
+    }
+
+    function handleAddModel(e) {
+      e.preventDefault();
+      const nextId = db.models.length > 0 ? Math.max(...db.models.map(x => Number(x.id) || 0)) + 1 : 1;
+      db.models.push({
+        id: nextId,
+        series: document.getElementById('newModelSeries').value.trim(),
+        code: document.getElementById('newModelCode').value.trim(),
+        price_per_m2: Number(document.getElementById('newModelPrice').value) || 0,
+        is_model2: document.getElementById('newModelIsTulle').checked
+      });
+      saveDatabase();
+      populateCalculatorOptions();
+      renderAdminPricingPanels();
+      e.target.reset();
+      showToast('Yeni seri/model eklendi.');
+    }
+
+    function updateModelPrice(id) {
+      const m = db.models.find(x => x.id === id);
+      if (!m) return;
+      m.price_per_m2 = Number(document.getElementById(`modelPrice-${id}`).value) || 0;
+      saveDatabase();
+      populateCalculatorOptions();
+      showToast(`${m.series} (${m.code}) fiyatı güncellendi.`);
+    }
+
+    function deleteModel(id) {
+      db.models = db.models.filter(x => x.id !== id);
+      saveDatabase();
+      populateCalculatorOptions();
+      renderAdminPricingPanels();
+      showToast('Model silindi.', 'info');
+    }
+
+    function handleAddSystem(e) {
+      e.preventDefault();
+      const nextId = db.systems.length > 0 ? Math.max(...db.systems.map(x => Number(x.id) || 0)) + 1 : 1;
+      db.systems.push({
+        id: nextId,
+        name: document.getElementById('newSystemName').value.trim(),
+        extra_price: Number(document.getElementById('newSystemPrice').value) || 0
+      });
+      saveDatabase();
+      populateCalculatorOptions();
+      renderAdminPricingPanels();
+      e.target.reset();
+      showToast('Yeni sistem türü eklendi.');
+    }
+
+    function updateSystemPrice(id) {
+      const s = db.systems.find(x => x.id === id);
+      if (!s) return;
+      s.extra_price = Number(document.getElementById(`sysPrice-${id}`).value) || 0;
+      saveDatabase();
+      populateCalculatorOptions();
+      showToast(`${s.name} ek ücreti güncellendi.`);
+    }
+
+    function deleteSystem(id) {
+      db.systems = db.systems.filter(x => x.id !== id);
+      saveDatabase();
+      populateCalculatorOptions();
+      renderAdminPricingPanels();
+      showToast('Sistem silindi.', 'info');
+    }
+
+    function handleAddCase(e) {
+      e.preventDefault();
+      const nextId = db.cases.length > 0 ? Math.max(...db.cases.map(x => Number(x.id) || 0)) + 1 : 1;
+      db.cases.push({
+        id: nextId,
+        name: document.getElementById('newCaseName').value.trim(),
+        swatch: document.getElementById('newCaseSwatch').value || '#94a3b8'
+      });
+      saveDatabase();
+      populateCalculatorOptions();
+      renderAdminPricingPanels();
+      e.target.reset();
+      showToast('Yeni kasa rengi eklendi.');
+    }
+
+    function deleteCase(id) {
+      db.cases = db.cases.filter(x => x.id !== id);
+      saveDatabase();
+      populateCalculatorOptions();
+      renderAdminPricingPanels();
+      showToast('Kasa rengi silindi.', 'info');
+    }
+
+    function renderAdminGalleryList() {
+      const list = document.getElementById('adminGalleryList');
+      list.innerHTML = db.gallery.map(item => `
+        <div class="rounded-2xl border border-stonearch-200 p-3 flex items-center justify-between gap-3 bg-stonearch-50/50">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-12 h-12 rounded-xl overflow-hidden bg-stonearch-200 shrink-0">
+              ${item.image_base64
+                ? `<img src="${item.image_base64}" alt="" class="w-full h-full object-cover" />`
+                : `<div class="w-full h-full flex items-center justify-center text-[10px] font-bold text-stonearch-800">${escapeHtml(item.series)}</div>`
+              }
+            </div>
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-stonearch-950 truncate">${escapeHtml(item.title)}</div>
+              <div class="text-[11px] text-stonearch-800/60">${escapeHtml(item.series)} ${item.image_base64 ? '• Base64' : ''}</div>
+            </div>
+          </div>
+          <button type="button" onclick="deleteGalleryItem(${item.id})" class="px-2.5 py-1 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 text-xs font-bold shrink-0 cursor-pointer">
+            Sil
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function handleAddGalleryItem(e) {
+      e.preventDefault();
+      const title = document.getElementById('galTitle').value.trim();
+      const series = document.getElementById('galSeries').value.trim();
+      const fileInput = document.getElementById('galFile');
+      const file = fileInput.files?.[0];
+
+      const commitItem = (base64Str) => {
+        const nextId = db.gallery.length > 0 ? Math.max(...db.gallery.map(x => Number(x.id) || 0)) + 1 : 1;
+        db.gallery.push({
+          id: nextId,
+          title,
+          series,
+          image_base64: base64Str || '',
+          accent: '#c85a32'
+        });
+        saveDatabase();
+        renderAdminGalleryList();
+        renderGallery();
+        e.target.reset();
+        showToast('Galeri görseli kaydedildi.');
+      };
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => commitItem(String(reader.result));
+        reader.readAsDataURL(file);
+      } else {
+        commitItem('');
+      }
+    }
+
+    function deleteGalleryItem(id) {
+      db.gallery = db.gallery.filter(x => x.id !== id);
+      saveDatabase();
+      renderAdminGalleryList();
+      renderGallery();
+      showToast('Galeri öğesi silindi.', 'info');
+    }
+
+    // -----------------------------------------------------------------------
+    // SİPARİŞ DETAY MODALI & YAZDIRILABİLİR SİPARİŞ FİŞİ / PDF ÇIKTISI
+    // -----------------------------------------------------------------------
+    function openOrderDetailModal(orderId) {
+      const ord = db.orders.find(o => Number(o.id) === Number(orderId));
+      if (!ord) return;
+      activeModalOrderId = ord.id;
+      const st = ORDER_STATUS_MAP[ord.status] || ORDER_STATUS_MAP[1];
+
+      const adminStatusBar = document.getElementById('modalAdminStatusBar');
+      if (currentUser && currentUser.role === 'admin') {
+        adminStatusBar.classList.remove('hidden');
+        const stages = [
+          { code: 1, text: 'Sipariş Alındı' },
+          { code: 2, text: 'Üretime Başlandı / Hazırlanıyor' },
+          { code: 3, text: 'Kargoya Verildi' },
+          { code: 4, text: 'Teslim Edildi' }
+        ];
+        document.getElementById('modalStatusOptions').innerHTML = stages.map(s => `
+          <label class="flex items-center gap-2 p-2 rounded-xl border text-xs font-semibold cursor-pointer ${
+            ord.status === s.code ? 'border-terracotta-600 bg-terracotta-50 text-terracotta-700' : 'border-stonearch-200 bg-white text-stonearch-800'
+          }">
+            <input type="checkbox" ${ord.status === s.code ? 'checked' : ''} onchange="updateOrderStatus(${ord.id}, ${s.code})" class="rounded text-terracotta-600" />
+            <span>${s.text}</span>
+          </label>
+        `).join('');
+      } else {
+        adminStatusBar.classList.add('hidden');
+      }
+
+      document.getElementById('printableArea').innerHTML = `
+        <div class="flex items-start justify-between border-b-2 border-stonearch-900 pb-3">
+          <div>
+            <div class="text-base font-extrabold text-stonearch-950">PLİSE PERDE — SİPARİŞ VE ÜRETİM FİŞİ</div>
+            <div class="text-xs text-stonearch-800/70">Sipariş No: <strong>#${ord.id}</strong> • Tarih: ${escapeHtml(ord.created_at)}</div>
+            <div class="text-[11px] text-stonearch-800/60">Nenehatun, 41700 Darıca/Kocaeli • (534) 389-11-04 • info@pliseperde.com</div>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold border ${st.badge}">${st.label}</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-stonearch-50 p-3.5 rounded-xl text-xs border border-stonearch-200">
+          <div><strong>Müşteri:</strong> ${escapeHtml(ord.customer_name)}</div>
+          <div><strong>Dükkan:</strong> ${escapeHtml(ord.shop_name)}</div>
+          <div><strong>Telefon:</strong> ${escapeHtml(ord.phone)}</div>
+          <div><strong>Genel Toplam:</strong> <strong>${formatTRY(ord.total_amount)}</strong></div>
+        </div>
+
+        <div class="space-y-2">
+          <div class="font-bold text-xs uppercase tracking-wider text-stonearch-800">Sipariş Kalemleri</div>
+          ${(ord.items || []).map((it, idx) => `
+            <div class="rounded-xl border border-stonearch-200 p-3 text-xs space-y-1">
+              <div class="font-bold text-stonearch-950">${idx + 1}. ${escapeHtml(it.series)} Serisi — Model Kodu: ${escapeHtml(it.model_code)} (${it.qty} Adet)</div>
+              <div>Ölçü: <strong>${it.width} cm × ${it.height} cm</strong> | Hesaplanan Alan: <strong>${Number(it.billed_area || 1).toFixed(2)} m²</strong></div>
+              <div>Kasa Rengi: ${escapeHtml(it.case_color)} | Sistem: ${escapeHtml(it.system)}</div>
+              ${it.isDouble ? `<div>Model 2: ${escapeHtml(it.model2_code)} | Ekstra Sistem: ${escapeHtml(it.extra_system || 'Yok')}</div>` : ''}
+              ${it.note ? `<div class="italic text-stonearch-800/75">Özel Not: ${escapeHtml(it.note)}</div>` : ''}
+              <div class="font-bold text-right pt-1 border-t border-stonearch-100">Satır Tutarı: ${formatTRY(it.line_total)}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      document.getElementById('orderDetailModal').classList.remove('hidden');
+    }
+
+    function closeOrderModal() {
+      document.getElementById('orderDetailModal').classList.add('hidden');
+      activeModalOrderId = null;
+    }
+
+    // -----------------------------------------------------------------------
+    // GÖMÜLÜ VERİTABANI DIŞA / İÇE AKTARIM & TAŞINABİLİR HTML EXPORT
+    // -----------------------------------------------------------------------
+    function triggerDownload(filename, content, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportDbJson() {
+      triggerDownload('plise-perde-veritabani-yedek.json', JSON.stringify(db, null, 2), 'application/json');
+      showToast('JSON veritabanı yedeği indirildi.');
+    }
+
+    function importDbJsonFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result));
+          if (!parsed.models || !parsed.users || !parsed.orders) {
+            showToast('Geçersiz veritabanı JSON formatı.', 'error');
+            return;
+          }
+          db = parsed;
+          saveDatabase();
+          populateCalculatorOptions();
+          renderCart();
+          renderGallery();
+          renderAccountTab();
+          renderAdminTab();
+          showToast('JSON veritabanı yedeği başarıyla yüklendi!');
+        } catch {
+          showToast('JSON dosyası okunamadı.', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetDatabaseToSeed() {
+      db = getSeedData();
+      saveDatabase();
+      currentUser = null;
+      localStorage.removeItem(SESSION_KEY);
+      populateCalculatorOptions();
+      renderCart();
+      renderGallery();
+      renderAccountTab();
+      renderAdminTab();
+      updateHeaderUserBox();
+      showToast('Veritabanı fabrikasyon ayarlarına sıfırlandı.', 'info');
+    }
+
+    function downloadStandaloneSnapshot() {
+      const clone = document.documentElement.cloneNode(true);
+      const seedScript = clone.querySelector('#embedded-db-seed');
+      if (seedScript) {
+        seedScript.textContent = JSON.stringify(db, null, 2);
+      }
+      const htmlContent = '<!DOCTYPE html>\n' + clone.outerHTML;
+      triggerDownload('plise-perde-sistem.html', htmlContent, 'text/html;charset=utf-8');
+      showToast('Tüm güncel verilerin gömülü olduğu tek parça .html dosyası indirildi!');
+    }
+
+    // -----------------------------------------------------------------------
+    // BAŞLATMA
+    // -----------------------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('footerYear').textContent = new Date().getFullYear();
+      loadDatabase();
+      updateDbStatsBadge();
+      populateCalculatorOptions();
+      renderCart();
+      updateHeaderUserBox();
+      switchTab('order');
+    });
+  </script>
+</body>
+</html>
